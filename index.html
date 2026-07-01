@@ -158,11 +158,29 @@
   .u-card ul{margin:0;padding-left:20px;}
   .u-card li{font-size:14px;line-height:1.62;color:#3A4A42;margin-bottom:6px;}
   .u-card li:last-child{margin-bottom:0;}
-  .tier{display:flex;gap:14px;padding:12px 0;border-bottom:1px solid #F0ECE0;}
+  .tier{display:flex;gap:14px;align-items:flex-start;padding:14px 0;border-bottom:1px solid #F0ECE0;}
   .tier:last-child{border-bottom:none;padding-bottom:0;}
-  .tier .pct{flex-shrink:0;width:56px;font-family:'Lora',serif;font-size:22px;font-weight:700;color:#0E5C43;}
-  .tier .plist{font-size:13.5px;line-height:1.55;color:#3A4A42;}
-  .tier .gname{font-weight:600;color:#0B241B;display:block;margin-bottom:3px;font-size:12.5px;}
+  .tier .pct{flex-shrink:0;min-width:62px;text-align:center;font-family:'Lora',serif;font-size:19px;font-weight:700;color:#fff;background:#0E5C43;border-radius:9px;padding:8px 6px;}
+  .tier .plist{font-size:13.5px;line-height:1.6;color:#3A4A42;padding-top:2px;}
+  .tier .gname{font-weight:600;color:#0B241B;display:block;margin-bottom:4px;font-size:12.5px;}
+
+  /* usage stat strip */
+  .u-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:2px;}
+  .stat{background:#0B2E22;color:#F4EFE2;border-radius:12px;padding:14px 8px;text-align:center;}
+  .stat-num{font-family:'Lora',serif;font-size:18px;font-weight:700;color:#fff;line-height:1.1;}
+  .stat-lb{font-size:10.5px;color:#AFCBBD;margin-top:5px;line-height:1.35;}
+  @media(max-width:560px){ .u-stats{grid-template-columns:repeat(2,1fr);} }
+
+  /* backdate mini-wizard */
+  .bd-intro{font-size:14px;line-height:1.6;color:#3A4A42;margin:0 0 15px;}
+  .bd-q{font-family:'Lora',serif;font-size:16px;font-weight:600;color:#0B241B;margin:0 0 14px;line-height:1.4;}
+  .bd-result{border:1.5px solid;border-radius:12px;padding:16px 18px;}
+  .bd-result-head{display:flex;align-items:center;gap:11px;margin-bottom:9px;}
+  .bd-result-icon{flex-shrink:0;width:30px;height:30px;border-radius:50%;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;}
+  .bd-result-title{font-family:'Lora',serif;font-size:16px;font-weight:600;color:#0B241B;line-height:1.3;}
+  .bd-result-detail{font-size:14px;line-height:1.68;color:#3A4A42;margin:0 0 14px;}
+  .bd-result-actions{display:flex;gap:10px;flex-wrap:wrap;}
+  .bd-result-actions .btn-secondary,.bd-result-actions .btn-ghost{padding:10px 16px;font-size:13.5px;}
   .bd{display:flex;flex-direction:column;gap:10px;}
   .bd-row{border:1px solid #E2E6DE;border-radius:10px;overflow:hidden;}
   .bd-head{background:#F1F5F1;padding:11px 15px;font-weight:600;font-size:13.5px;color:#0B241B;}
@@ -396,8 +414,30 @@ window.VHM = {
     r_no_project: { type:'r', tone:'no', title:'Dự án chưa thuộc diện tặng Voucher', detail:'Theo chính sách, chỉ các dự án thuộc Nhóm 1 (10%) và Nhóm 2 (8%) mới được tặng Voucher. Dự án bạn chọn hiện không nằm trong danh sách hai nhóm này. Vui lòng liên hệ tư vấn viên/CĐT để được xác nhận chính xác cho trường hợp của bạn.', refs:[] }
   };
 
+  // ========= BACKDATE mini-wizard (khách mua 01/01–20/06/2026) =========
+  var bdNodes = {
+    bd_start: { type:'q', q:'Bạn đang sở hữu mấy căn (đã mua) và tình trạng tặng Voucher?', opts:[
+      { label:'Mới mua 1 căn — thuộc nhóm được tặng VC', next:'r_bd_1' },
+      { label:'Đã mua 2 căn: 1 căn được tặng VC + 1 căn KHÔNG được tặng', next:'bd_th2' },
+      { label:'Đã mua 2 căn — cả 2 đều được tặng VC (2 Voucher)', next:'bd_th3' }
+    ]},
+    bd_th2: { type:'q', q:'Bạn muốn dùng Voucher (của căn được tặng) như thế nào?', opts:[
+      { label:'Dùng để MUA CĂN MỚI (không áp vào căn 2)', next:'r_bd_2a' },
+      { label:'Áp vào CĂN 2 (căn đã mua, không được tặng)', next:'r_bd_2b' }
+    ]},
+    bd_th3: { type:'q', q:'Bạn muốn dùng 2 Voucher như thế nào?', opts:[
+      { label:'Dùng để MUA CĂN MỚI (căn 3, 4)', next:'r_bd_3a' },
+      { label:'Áp VC của căn 2 vào CHÍNH CĂN 2', next:'r_bd_3b' }
+    ]},
+    r_bd_1:  { type:'r', tone:'yes',  title:'Được 1 Voucher', detail:'Dùng Voucher đó để mua căn thứ 2 (căn mua mới).' },
+    r_bd_2a: { type:'r', tone:'yes',  title:'Cách A — Dùng VC của căn 1 mua căn mới', detail:'Không dùng VC cho căn 2. Dùng VC của căn 1 để mua căn mới (căn 3).' },
+    r_bd_2b: { type:'r', tone:'cond', title:'Cách B — Áp VC vào căn 2', detail:'Áp VC vào căn 2: chặn tối đa 30% giá trị căn 2; phần dư CĐT hoàn bằng điểm Vpoint (không hoàn tiền); nếu vẫn dư thì phần dư được dùng sang căn sau.' },
+    r_bd_3a: { type:'r', tone:'yes',  title:'Cách A — Dùng 2 VC mua căn mới', detail:'Được 2 Voucher. Dùng cả 2 VC để mua căn mới (căn 3, 4).' },
+    r_bd_3b: { type:'r', tone:'cond', title:'Cách B — Áp VC căn 2 vào chính căn 2', detail:'Áp VC của căn 2 vào chính căn 2: chặn tối đa 30% giá trị căn 2; phần dư hoàn Vpoint (không hoàn tiền); sau đó căn 2 không được nhận voucher nữa; nếu vẫn dư thì dùng sang căn sau. VC của căn 1 vẫn dùng để mua căn mới.' }
+  };
+
   // ================= STATE =================
-  var state = { tab:'check', nodeId:'proj', history:[], expandedFaq:null, pct:null, projName:null, consultRequested:false };
+  var state = { tab:'check', nodeId:'proj', history:[], expandedFaq:null, pct:null, projName:null, consultRequested:false, bdId:'bd_start', bdHistory:[] };
   var view = document.getElementById('view');
   var keys = ['A','B','C','D'];
   var loggedResults = {};   // dedup funnel logging per result per session
@@ -423,6 +463,10 @@ window.VHM = {
     state.consultRequested = true;
     render();
   }
+  // backdate mini-wizard transitions
+  function bdGo(next){ state.bdHistory.push(state.bdId); state.bdId = next; render(); }
+  function bdBack(){ if(state.bdHistory.length){ state.bdId = state.bdHistory.pop(); render(); } }
+  function bdRestart(){ state.bdId = 'bd_start'; state.bdHistory = []; render(); }
   function chooseProject(){
     var sel = document.getElementById('proj-select');
     if (!sel || !sel.value) return;
@@ -544,15 +588,48 @@ window.VHM = {
     return html;
   }
 
+  function renderBackdate(){
+    var raw = bdNodes[state.bdId] || bdNodes.bd_start;
+    var html = '';
+    if (raw.type === 'q'){
+      html += '<p class="bd-q">' + esc(raw.q) + '</p>';
+      html += '<div class="opts">';
+      raw.opts.forEach(function(o,i){
+        html += '<button class="opt" data-bd-go="' + esc(o.next) + '"><span class="key">' + keys[i] + '</span><span>' + esc(o.label) + '</span></button>';
+      });
+      html += '</div>';
+      if (state.bdHistory.length) html += '<button class="link-back" data-bd-back="1">← Quay lại</button>';
+    } else {
+      var t = tones[raw.tone];
+      html += '<div class="bd-result" style="background:' + t.bg + ';border-color:' + t.border + ';">';
+      html +=   '<div class="bd-result-head"><span class="bd-result-icon" style="background:' + t.accent + ';">' + t.icon + '</span><span class="bd-result-title">' + esc(raw.title) + '</span></div>';
+      html +=   '<p class="bd-result-detail">' + esc(raw.detail) + '</p>';
+      html +=   '<div class="bd-result-actions"><button class="btn-secondary" data-bd-restart="1">↻ Chọn lại</button>';
+      if (state.bdHistory.length) html += '<button class="btn-ghost" data-bd-back="1">← Quay lại</button>';
+      html +=   '</div>';
+      html += '</div>';
+    }
+    return html;
+  }
+
   function renderUsage(){
     var html = '<div class="usage">';
+
+    // 0 — Stat strip
+    html += '<div class="u-stats">'
+         +    '<div class="stat"><div class="stat-num">≥20%</div><div class="stat-lb">đã đóng trước 20/06</div></div>'
+         +    '<div class="stat"><div class="stat-num">10% / 8%</div><div class="stat-lb">giá trị Voucher</div></div>'
+         +    '<div class="stat"><div class="stat-num">≤30%</div><div class="stat-lb">trần dùng / căn mới</div></div>'
+         +    '<div class="stat"><div class="stat-num">31/12/26</div><div class="stat-lb">hạn sử dụng</div></div>'
+         +  '</div>';
 
     // 1 — Value tiers
     html += '<div class="u-card">';
     html +=   '<h3><span class="ic">%</span>Giá trị Voucher theo dự án</h3>';
     html +=   '<p style="margin-bottom:6px;">Khách đã mua BĐS VHM trước 20/06/2026 &amp; thanh toán tối thiểu 20% được tặng <b>1 Voucher / 1 BĐS</b>, giá trị theo dự án:</p>';
     Object.keys(groups).forEach(function(k){
-      html += '<div class="tier"><span class="pct">' + esc(groups[k].pct) + '</span><div class="plist"><span class="gname">' + esc(groups[k].label) + '</span>' + groups[k].projects.map(esc).join(' · ') + '</div></div>';
+      var pctBg = k === 'n1' ? '#0E5C43' : '#C9962A';
+      html += '<div class="tier"><span class="pct" style="background:' + pctBg + ';">' + esc(groups[k].pct) + '</span><div class="plist"><span class="gname">' + esc(groups[k].label) + '</span>' + groups[k].projects.map(esc).join(' · ') + '</div></div>';
     });
     html +=   '<p class="u-note" style="margin-top:10px;">Giá trị tính theo Giá trị BĐS đang sở hữu — <b>không gồm VAT và KPBT</b>. Dự án ngoài 2 nhóm trên: không thuộc diện tặng Voucher.</p>';
     html += '</div>';
@@ -597,23 +674,11 @@ window.VHM = {
     html +=   '<p>BĐS mua mới thanh toán bằng Voucher sẽ bị <b>hạn chế chuyển nhượng</b> theo quy định của CĐT công bố — <b>dự kiến 6 tháng</b>.</p>';
     html += '</div>';
 
-    // 7 — Backdate matrix
+    // 7 — Backdate mini-wizard
     html += '<div class="u-card">';
     html +=   '<h3><span class="ic">⇄</span>Áp dụng backdate cho khách mua 01/01–20/06/2026</h3>';
-    html +=   '<div class="bd">';
-    html +=     '<div class="bd-row"><div class="bd-head">TH1 · Đã mua 1 căn thuộc nhóm được tặng VC</div>'
-             +    '<div class="bd-body">Được <b>1 Voucher</b>. Nếu chưa mua căn thứ 2 → dùng Voucher đó để <b>mua căn thứ 2</b> (căn mua mới).</div></div>';
-    html +=     '<div class="bd-row"><div class="bd-head">TH2 · Đã mua 2 căn: 1 căn thuộc nhóm tặng VC + 1 căn không thuộc nhóm</div>'
-             +    '<div class="bd-body">Được <b>1 Voucher</b> (từ căn thuộc nhóm). Hai lựa chọn:'
-             +      '<div class="bd-opt"><b>Cách A —</b> Không dùng VC cho căn 2 → dùng <b>VC của căn 1</b> để <b>mua căn mới</b> (căn 3).</div>'
-             +      '<div class="bd-opt"><b>Cách B —</b> Áp VC vào <b>căn 2</b>: chỉ trừ tối đa <b>30%</b> giá trị căn 2; phần dư CĐT <b>hoàn Vpoint</b> (không hoàn tiền); còn dư nữa thì dùng sang căn sau.</div>'
-             +    '</div></div>';
-    html +=     '<div class="bd-row"><div class="bd-head">TH3 · Đã mua 2 căn và được tặng 2 VC (cả 2 căn đều thuộc nhóm tặng VC)</div>'
-             +    '<div class="bd-body">Được <b>2 Voucher</b> (mỗi căn 1 VC). Hai cách dùng:'
-             +      '<div class="bd-opt"><b>Cách A —</b> Dùng cả 2 Voucher để <b>mua căn mới</b> (căn 3, 4).</div>'
-             +      '<div class="bd-opt"><b>Cách B —</b> Áp VC của căn 2 vào <b>chính căn 2</b>: chặn tối đa <b>30%</b> giá trị căn 2; phần dư CĐT <b>hoàn Vpoint</b> (không hoàn tiền). Sau đó <b>căn 2 không được nhận voucher nữa</b>; nếu VC dùng cho căn 2 vẫn dư thì phần dư dùng sang căn sau. (VC của căn 1 vẫn dùng để mua căn mới.)</div>'
-             +    '</div></div>';
-    html +=   '</div>';
+    html +=   '<p class="bd-intro">Trả lời nhanh để biết cách áp dụng Voucher cho trường hợp nhiều căn:</p>';
+    html +=   renderBackdate();
     html += '</div>';
 
     html +=   '<p class="foot-note">Tổng hợp theo chính sách tặng &amp; sử dụng Voucher VHM (Nội dung 1 &amp; 2 + bảng backdate). Trường hợp cụ thể do CĐT/VHM trình duyệt.</p>';
@@ -650,10 +715,13 @@ window.VHM = {
 
   // ================= EVENT DELEGATION =================
   document.addEventListener('click', function(e){
-    var el = e.target.closest ? e.target.closest('[data-tab],[data-go],[data-back],[data-restart],[data-ref],[data-tabgo],[data-faq],[data-proj-continue],[data-consult]') : null;
+    var el = e.target.closest ? e.target.closest('[data-tab],[data-go],[data-back],[data-restart],[data-ref],[data-tabgo],[data-faq],[data-proj-continue],[data-consult],[data-bd-go],[data-bd-back],[data-bd-restart]') : null;
     if (!el) return;
     if (el.hasAttribute('data-tab'))          { setTab(el.getAttribute('data-tab')); return; }
     if (el.hasAttribute('data-consult'))      { requestConsult(); return; }
+    if (el.hasAttribute('data-bd-go'))        { bdGo(el.getAttribute('data-bd-go')); return; }
+    if (el.hasAttribute('data-bd-back'))      { bdBack(); return; }
+    if (el.hasAttribute('data-bd-restart'))   { bdRestart(); return; }
     if (el.hasAttribute('data-proj-continue')){ chooseProject(); return; }
     if (el.hasAttribute('data-go'))           { go(el.getAttribute('data-go')); return; }
     if (el.hasAttribute('data-back'))    { back(); return; }
