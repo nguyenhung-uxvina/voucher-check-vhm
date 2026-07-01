@@ -181,6 +181,19 @@
   .bd-result-detail{font-size:14px;line-height:1.68;color:#3A4A42;margin:0 0 14px;}
   .bd-result-actions{display:flex;gap:10px;flex-wrap:wrap;}
   .bd-result-actions .btn-secondary,.bd-result-actions .btn-ghost{padding:10px 16px;font-size:13.5px;}
+
+  /* voucher value calculator */
+  .calc{display:flex;flex-direction:column;gap:12px;margin-bottom:14px;}
+  .calc-field label{display:block;font-size:12.5px;font-weight:600;color:#3A4A42;margin-bottom:6px;}
+  .calc-input{width:100%;border:1.5px solid #DDE3DB;border-radius:10px;padding:11px 13px;font-family:'Be Vietnam Pro',sans-serif;font-size:14.5px;color:#233028;outline:none;background:#FAFBF9;}
+  .calc-input:focus{border-color:#1E8C5A;}
+  .calc-echo{font-size:11.5px;color:#8A9088;margin-top:5px;min-height:14px;}
+  .calc-out{background:#F7F4ED;border:1px solid #E7E1D3;border-radius:10px;padding:4px 16px;}
+  .calc-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid #EBE6D8;font-size:14px;color:#3A4A42;}
+  .calc-row:last-child{border-bottom:none;}
+  .calc-row b{font-family:'Lora',serif;font-size:16px;color:#0E5C43;white-space:nowrap;}
+  .calc-row.hl b{font-size:19px;color:#0B241B;}
+  .calc-hint{padding:14px 0;font-size:13px;color:#8A9088;}
   .bd{display:flex;flex-direction:column;gap:10px;}
   .bd-row{border:1px solid #E2E6DE;border-radius:10px;overflow:hidden;}
   .bd-head{background:#F1F5F1;padding:11px 15px;font-weight:600;font-size:13.5px;color:#0B241B;}
@@ -437,7 +450,7 @@ window.VHM = {
   };
 
   // ================= STATE =================
-  var state = { tab:'check', nodeId:'proj', history:[], expandedFaq:null, pct:null, projName:null, consultRequested:false, bdId:'bd_start', bdHistory:[] };
+  var state = { tab:'check', nodeId:'proj', history:[], expandedFaq:null, pct:null, projName:null, consultRequested:false, bdId:'bd_start', bdHistory:[], calc:{ group:'n1', own:'', neu:'' } };
   var view = document.getElementById('view');
   var keys = ['A','B','C','D'];
   var loggedResults = {};   // dedup funnel logging per result per session
@@ -450,6 +463,31 @@ window.VHM = {
 
   function esc(s){
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ---- voucher value calculator ----
+  function calcNum(s){ var d = (s || '').replace(/[^\d]/g, ''); return d ? parseInt(d, 10) : 0; }
+  function fmtVnd(n){ try { return n.toLocaleString('vi-VN'); } catch(e){ return String(n); } }
+  function calcHtml(){
+    var g = state.calc.group, pct = g === 'n1' ? 0.10 : 0.08, pctLabel = g === 'n1' ? '10%' : '8%';
+    var own = calcNum(state.calc.own);
+    if (!own) return '<div class="calc-hint">Nhập giá trị BĐS đang sở hữu để tính giá trị Voucher.</div>';
+    var voucher = Math.round(own * pct);
+    var html = '<div class="calc-row"><span>Giá trị Voucher (' + pctLabel + ' × giá trị BĐS)</span><b>' + fmtVnd(voucher) + ' đ</b></div>';
+    var neu = calcNum(state.calc.neu);
+    if (neu){
+      var cap = Math.round(neu * 0.30);
+      var applied = Math.min(voucher, cap);
+      var leftover = Math.max(0, voucher - cap);
+      html += '<div class="calc-row"><span>Trần 30% giá trị căn mua mới</span><b>' + fmtVnd(cap) + ' đ</b></div>';
+      html += '<div class="calc-row hl"><span>Áp dụng tối đa cho căn này</span><b>' + fmtVnd(applied) + ' đ</b></div>';
+      if (leftover > 0) html += '<div class="calc-row"><span>Phần dư — dùng cho BĐS khác</span><b>' + fmtVnd(leftover) + ' đ</b></div>';
+    }
+    return html;
+  }
+  function calcEcho(field){
+    var n = calcNum(state.calc[field]);
+    return n ? '= ' + fmtVnd(n) + ' đ' : '';
   }
 
   // ---- transitions ----
@@ -634,6 +672,26 @@ window.VHM = {
     html +=   '<p class="u-note" style="margin-top:10px;">Giá trị tính theo Giá trị BĐS đang sở hữu — <b>không gồm VAT và KPBT</b>. Dự án ngoài 2 nhóm trên: không thuộc diện tặng Voucher.</p>';
     html += '</div>';
 
+    // 1b — Máy tính giá trị Voucher
+    html += '<div class="u-card">';
+    html +=   '<h3><span class="ic">🧮</span>Tính giá trị Voucher</h3>';
+    html +=   '<div class="calc">';
+    html +=     '<div class="calc-field"><label>Nhóm dự án</label>'
+             +    '<select class="calc-input" data-calc="group">'
+             +      '<option value="n1"' + (state.calc.group === 'n1' ? ' selected' : '') + '>Nhóm 1 — 10%</option>'
+             +      '<option value="n2"' + (state.calc.group === 'n2' ? ' selected' : '') + '>Nhóm 2 — 8%</option>'
+             +    '</select></div>';
+    html +=     '<div class="calc-field"><label>Giá trị BĐS đang sở hữu (chưa gồm VAT &amp; KPBT)</label>'
+             +    '<input class="calc-input" data-calc="own" inputmode="numeric" placeholder="VD: 5000000000" value="' + esc(state.calc.own) + '" />'
+             +    '<div class="calc-echo" id="echo-own">' + calcEcho('own') + '</div></div>';
+    html +=     '<div class="calc-field"><label>Giá trị BĐS mua mới — HĐMB/HĐCN (tùy chọn, để tính trần 30%)</label>'
+             +    '<input class="calc-input" data-calc="neu" inputmode="numeric" placeholder="VD: 3000000000" value="' + esc(state.calc.neu) + '" />'
+             +    '<div class="calc-echo" id="echo-neu">' + calcEcho('neu') + '</div></div>';
+    html +=   '</div>';
+    html +=   '<div class="calc-out" id="calc-out">' + calcHtml() + '</div>';
+    html +=   '<p class="u-note" style="margin-top:12px;">Ước tính tham khảo: Voucher = tỷ lệ nhóm × giá trị BĐS (giá HĐMB/HĐCN khách lẻ đầu tiên, không gồm VAT &amp; KPBT). Khi dùng, mỗi BĐS mua mới áp tối đa 30% giá trị. Căn giãn xây tính theo Giá trị Đất &amp; Thương mại.</p>';
+    html += '</div>';
+
     // 2 — Cách tính giá trị
     html += '<div class="u-card">';
     html +=   '<h3><span class="ic">₫</span>Cách tính giá trị Voucher</h3>';
@@ -730,6 +788,18 @@ window.VHM = {
     if (el.hasAttribute('data-ref'))     { openFaq(parseInt(el.getAttribute('data-ref'), 10)); return; }
     if (el.hasAttribute('data-faq'))     { toggleFaq(parseInt(el.getAttribute('data-faq'), 10)); return; }
   });
+
+  // live calculator — update output only (keep input focus, no full re-render)
+  function onCalcInput(e){
+    var t = e.target;
+    var field = t && t.getAttribute && t.getAttribute('data-calc');
+    if (!field || !state.calc.hasOwnProperty(field)) return;
+    state.calc[field] = t.value;
+    var out = document.getElementById('calc-out'); if (out) out.innerHTML = calcHtml();
+    if (field !== 'group'){ var echo = document.getElementById('echo-' + field); if (echo) echo.textContent = calcEcho(field); }
+  }
+  document.addEventListener('input', onCalcInput);
+  document.addEventListener('change', onCalcInput);
 
   render();
 })();
