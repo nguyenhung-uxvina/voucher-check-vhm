@@ -193,7 +193,14 @@
   .calc-row:last-child{border-bottom:none;}
   .calc-row b{font-family:'Lora',serif;font-size:16px;color:#0E5C43;white-space:nowrap;}
   .calc-row.hl b{font-size:19px;color:#0B241B;}
+  .calc-row.good b{color:#1B7A4B;}
+  .calc-row.warn b{color:#C0392B;}
   .calc-hint{padding:14px 0;font-size:13px;color:#8A9088;}
+  .calc-slider{width:100%;-webkit-appearance:none;appearance:none;height:6px;border-radius:6px;background:#DDE3DB;outline:none;accent-color:#0E5C43;cursor:pointer;margin:2px 0;}
+  .calc-slider:disabled{opacity:.5;cursor:default;}
+  .calc-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:20px;height:20px;border-radius:50%;background:#0E5C43;border:3px solid #fff;box-shadow:0 1px 4px rgba(11,36,27,.3);cursor:pointer;}
+  .calc-slider::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:#0E5C43;border:3px solid #fff;cursor:pointer;}
+  .slider-scale{display:flex;justify-content:space-between;font-size:11px;color:#8A9088;margin-top:6px;}
   .bd{display:flex;flex-direction:column;gap:10px;}
   .bd-row{border:1px solid #E2E6DE;border-radius:10px;overflow:hidden;}
   .bd-head{background:#F1F5F1;padding:11px 15px;font-weight:600;font-size:13.5px;color:#0B241B;}
@@ -450,7 +457,7 @@ window.VHM = {
   };
 
   // ================= STATE =================
-  var state = { tab:'check', nodeId:'proj', history:[], expandedFaq:null, pct:null, projName:null, consultRequested:false, bdId:'bd_start', bdHistory:[], calc:{ group:'n1', own:'', neu:'' } };
+  var state = { tab:'check', nodeId:'proj', history:[], expandedFaq:null, pct:null, projName:null, consultRequested:false, bdId:'bd_start', bdHistory:[], calc:{ group:'n1', own:'', neu:'', neuTouched:false } };
   var view = document.getElementById('view');
   var keys = ['A','B','C','D'];
   var loggedResults = {};   // dedup funnel logging per result per session
@@ -468,26 +475,50 @@ window.VHM = {
   // ---- voucher value calculator ----
   function calcNum(s){ var d = (s || '').replace(/[^\d]/g, ''); return d ? parseInt(d, 10) : 0; }
   function fmtVnd(n){ try { return n.toLocaleString('vi-VN'); } catch(e){ return String(n); } }
+  function voucherValue(){ var pct = state.calc.group === 'n1' ? 0.10 : 0.08; return Math.round(calcNum(state.calc.own) * pct); }
+  function pCenter(){ var V = voucherValue(); return V > 0 ? Math.round(V / 0.30) : 0; }  // giá căn mới sao cho 30% = Voucher
   function calcHtml(){
-    var g = state.calc.group, pct = g === 'n1' ? 0.10 : 0.08, pctLabel = g === 'n1' ? '10%' : '8%';
+    var pctLabel = state.calc.group === 'n1' ? '10%' : '8%';
     var own = calcNum(state.calc.own);
-    if (!own) return '<div class="calc-hint">Nhập giá trị BĐS đang sở hữu để tính giá trị Voucher.</div>';
-    var voucher = Math.round(own * pct);
-    var html = '<div class="calc-row"><span>Giá trị Voucher (' + pctLabel + ' × giá trị BĐS)</span><b>' + fmtVnd(voucher) + ' đ</b></div>';
-    var neu = calcNum(state.calc.neu);
-    if (neu){
-      var cap = Math.round(neu * 0.30);
-      var applied = Math.min(voucher, cap);
-      var leftover = Math.max(0, voucher - cap);
-      html += '<div class="calc-row"><span>Trần 30% giá trị căn mua mới</span><b>' + fmtVnd(cap) + ' đ</b></div>';
-      html += '<div class="calc-row hl"><span>Áp dụng tối đa cho căn này</span><b>' + fmtVnd(applied) + ' đ</b></div>';
-      if (leftover > 0) html += '<div class="calc-row"><span>Phần dư — dùng cho BĐS khác</span><b>' + fmtVnd(leftover) + ' đ</b></div>';
+    if (!own) return '<div class="calc-hint">Nhập giá trị BĐS đang sở hữu để hiện giá trị Voucher và thanh trượt căn mua mới.</div>';
+    var V = voucherValue();
+    var html = '<div class="calc-row hl"><span>Giá trị Voucher (' + pctLabel + ' × giá trị BĐS)</span><b>' + fmtVnd(V) + ' đ</b></div>';
+    var P = calcNum(state.calc.neu);
+    if (P > 0){
+      var pay30 = Math.round(P * 0.30);
+      var applied = Math.min(V, pay30);
+      var leftover = Math.max(0, V - pay30);
+      var mustpay = Math.max(0, pay30 - V);
+      html += '<div class="calc-row"><span>Giá trị căn mua mới (kéo thanh trượt)</span><b>' + fmtVnd(P) + ' đ</b></div>';
+      html += '<div class="calc-row"><span>Thanh toán đợt đầu 30% (vay ngân hàng)</span><b>' + fmtVnd(pay30) + ' đ</b></div>';
+      html += '<div class="calc-row"><span>Voucher áp dụng cho đợt đầu</span><b>' + fmtVnd(applied) + ' đ</b></div>';
+      if (leftover > 0)      html += '<div class="calc-row good"><span>Số dư Voucher — dùng cho BĐS khác</span><b>' + fmtVnd(leftover) + ' đ</b></div>';
+      else if (mustpay > 0)  html += '<div class="calc-row warn"><span>Số tiền phải bù thêm (tiền mặt)</span><b>' + fmtVnd(mustpay) + ' đ</b></div>';
+      else                   html += '<div class="calc-row good"><span>Voucher vừa đủ thanh toán 30% đợt đầu</span><b>✓</b></div>';
     }
     return html;
   }
   function calcEcho(field){
     var n = calcNum(state.calc[field]);
     return n ? '= ' + fmtVnd(n) + ' đ' : '';
+  }
+  function refreshCalc(){
+    var V = voucherValue(), ctr = pCenter(), max = ctr * 2;
+    var slider = document.getElementById('calc-neu');
+    if (slider){
+      slider.disabled = !(V > 0);
+      slider.min = 0; slider.max = max || 100;
+      slider.step = max ? Math.max(1, Math.round(max / 200)) : 1;
+      if (!state.calc.neuTouched && V > 0){ state.calc.neu = String(ctr); slider.value = ctr; }
+      else {
+        var n = calcNum(state.calc.neu);
+        if (n > max){ n = max; state.calc.neu = String(max); }
+        slider.value = n;
+      }
+    }
+    var mx = document.getElementById('calc-neu-max'); if (mx) mx.textContent = max ? fmtVnd(max) + ' đ' : '';
+    var out = document.getElementById('calc-out'); if (out) out.innerHTML = calcHtml();
+    var eo = document.getElementById('echo-own'); if (eo) eo.textContent = calcEcho('own');
   }
 
   // ---- transitions ----
@@ -673,6 +704,9 @@ window.VHM = {
     html += '</div>';
 
     // 1b — Máy tính giá trị Voucher
+    var Vc = voucherValue(), ctr = pCenter(), smax = ctr * 2;
+    if (!state.calc.neuTouched && Vc > 0) state.calc.neu = String(ctr);   // mặc định: chính giữa = điểm 30% căn mới bằng Voucher
+    var sval = calcNum(state.calc.neu);
     html += '<div class="u-card">';
     html +=   '<h3><span class="ic">🧮</span>Tính giá trị Voucher</h3>';
     html +=   '<div class="calc">';
@@ -684,12 +718,12 @@ window.VHM = {
     html +=     '<div class="calc-field"><label>Giá trị BĐS đang sở hữu (chưa gồm VAT &amp; KPBT)</label>'
              +    '<input class="calc-input" data-calc="own" inputmode="numeric" placeholder="VD: 5000000000" value="' + esc(state.calc.own) + '" />'
              +    '<div class="calc-echo" id="echo-own">' + calcEcho('own') + '</div></div>';
-    html +=     '<div class="calc-field"><label>Giá trị BĐS mua mới — HĐMB/HĐCN (tùy chọn, để tính trần 30%)</label>'
-             +    '<input class="calc-input" data-calc="neu" inputmode="numeric" placeholder="VD: 3000000000" value="' + esc(state.calc.neu) + '" />'
-             +    '<div class="calc-echo" id="echo-neu">' + calcEcho('neu') + '</div></div>';
+    html +=     '<div class="calc-field"><label>Giá trị BĐS mua mới (vay ngân hàng — trả trước 30%)</label>'
+             +    '<input type="range" class="calc-slider" data-calc="neu" id="calc-neu" min="0" max="' + (smax || 100) + '" step="' + (smax ? Math.max(1, Math.round(smax / 200)) : 1) + '" value="' + sval + '"' + (Vc > 0 ? '' : ' disabled') + ' />'
+             +    '<div class="slider-scale"><span>0 đ</span><span id="calc-neu-max">' + (smax ? fmtVnd(smax) + ' đ' : '') + '</span></div></div>';
     html +=   '</div>';
     html +=   '<div class="calc-out" id="calc-out">' + calcHtml() + '</div>';
-    html +=   '<p class="u-note" style="margin-top:12px;">Ước tính tham khảo: Voucher = tỷ lệ nhóm × giá trị BĐS (giá HĐMB/HĐCN khách lẻ đầu tiên, không gồm VAT &amp; KPBT). Khi dùng, mỗi BĐS mua mới áp tối đa 30% giá trị. Căn giãn xây tính theo Giá trị Đất &amp; Thương mại.</p>';
+    html +=   '<p class="u-note" style="margin-top:12px;">Ước tính tham khảo: Voucher = tỷ lệ nhóm × giá trị BĐS (giá HĐMB/HĐCN khách lẻ đầu tiên, không gồm VAT &amp; KPBT). Căn mới vay ngân hàng, trả trước 30% — Voucher áp vào phần 30% này (tối đa bằng giá trị Voucher). Căn giãn xây tính theo Giá trị Đất &amp; Thương mại.</p>';
     html += '</div>';
 
     // 2 — Cách tính giá trị
@@ -794,9 +828,9 @@ window.VHM = {
     var t = e.target;
     var field = t && t.getAttribute && t.getAttribute('data-calc');
     if (!field || !state.calc.hasOwnProperty(field)) return;
-    state.calc[field] = t.value;
-    var out = document.getElementById('calc-out'); if (out) out.innerHTML = calcHtml();
-    if (field !== 'group'){ var echo = document.getElementById('echo-' + field); if (echo) echo.textContent = calcEcho(field); }
+    if (field === 'neu'){ state.calc.neu = t.value; state.calc.neuTouched = true; }
+    else { state.calc[field] = t.value; }
+    refreshCalc();
   }
   document.addEventListener('input', onCalcInput);
   document.addEventListener('change', onCalcInput);
