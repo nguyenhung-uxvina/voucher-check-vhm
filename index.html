@@ -283,13 +283,9 @@
           </datalist>
         </div>
         <div class="gate-error" id="g-error"></div>
-        <label class="gate-consent">
-          <input type="checkbox" id="g-consent" />
-          <span>Tôi hiểu đây là trang tham khảo <b>không chính thức</b> và đồng ý cho đơn vị tư vấn liên hệ theo <a id="g-privacy-link">Điều khoản &amp; Bảo mật</a>.</span>
-        </label>
-        <div class="privacy-panel" id="g-privacy"><b>Miễn trừ trách nhiệm:</b> Đây là công cụ tra cứu tham khảo do đơn vị tư vấn tổng hợp, <b>KHÔNG phải trang chính thức</b> và <b>KHÔNG có liên kết</b> với Vinhomes / Vingroup. Nội dung chỉ mang tính tham khảo; thông tin chính thức căn cứ theo công bố của Chủ đầu tư và các điều khoản tại HĐMB.<br><br>Thông tin bạn cung cấp (số điện thoại, mã căn, tên dự án) chỉ dùng để hỗ trợ tư vấn, được lưu trên bảng tính nội bộ của đơn vị tư vấn. Bằng việc tiếp tục, bạn đồng ý cho đơn vị tư vấn liên hệ với bạn. Bạn có thể yêu cầu xóa thông tin bất cứ lúc nào qua tư vấn viên.</div>
         <button class="gate-submit" type="submit" id="g-submit">Vào công cụ →</button>
-        <p class="gate-note">Trang thông tin <b>tham khảo không chính thức</b> · không liên kết với Vinhomes / Vingroup · do đơn vị tư vấn tổng hợp.</p>
+        <p class="gate-note">Trang thông tin <b>tham khảo không chính thức</b> · không liên kết với Vinhomes / Vingroup · do đơn vị tư vấn tổng hợp. <a id="g-privacy-link">Điều khoản &amp; Bảo mật</a></p>
+        <div class="privacy-panel" id="g-privacy"><b>Miễn trừ trách nhiệm:</b> Đây là công cụ tra cứu tham khảo do đơn vị tư vấn tổng hợp, <b>KHÔNG phải trang chính thức</b> và <b>KHÔNG có liên kết</b> với Vinhomes / Vingroup. Nội dung chỉ mang tính tham khảo; thông tin chính thức căn cứ theo công bố của Chủ đầu tư và các điều khoản tại HĐMB.<br><br>Thông tin bạn cung cấp (số điện thoại, mã căn, tên dự án) chỉ dùng để hỗ trợ tư vấn, được lưu trên bảng tính nội bộ của đơn vị tư vấn. Bằng việc tiếp tục, bạn đồng ý cho đơn vị tư vấn liên hệ với bạn. Bạn có thể yêu cầu xóa thông tin bất cứ lúc nào qua tư vấn viên.</div>
       </form>
     </div>
   </div>
@@ -463,13 +459,7 @@ window.VHM = {
   var state = { tab:'check', nodeId:'proj', history:[], expandedFaq:null, pct:null, projName:null, consultRequested:false, bdId:'bd_start', bdHistory:[], calc:{ group:'n1', own:'', neu:'', neuTouched:false } };
   var view = document.getElementById('view');
   var keys = ['A','B','C','D'];
-  var loggedResults = {};   // dedup funnel logging per result per session
-
   function vlog(ev, detail){ if (window.VHM) window.VHM.log(ev, detail || ''); }
-  function maybeLogResult(id){
-    var n = nodes[id];
-    if (n && n.type === 'r' && !loggedResults[id]) { loggedResults[id] = true; vlog('kết quả', n.title); }
-  }
 
   function esc(s){
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -525,7 +515,7 @@ window.VHM = {
   }
 
   // ---- transitions ----
-  function go(next){ state.history.push(state.nodeId); state.nodeId = next; state.consultRequested = false; maybeLogResult(next); render(); }
+  function go(next){ state.history.push(state.nodeId); state.nodeId = next; state.consultRequested = false; render(); }
   function back(){ if(state.history.length){ state.nodeId = state.history.pop(); state.consultRequested = false; render(); } }
   function restart(){ state.nodeId = 'proj'; state.history = []; state.pct = null; state.projName = null; state.consultRequested = false; render(); }
   function setTab(t){ state.tab = t; render(); }
@@ -853,7 +843,6 @@ window.VHM = {
   var phoneI  = document.getElementById("g-phone");
   var macanI  = document.getElementById("g-macan");
   var projI   = document.getElementById("g-project");
-  var consentI= document.getElementById("g-consent");
   var errEl   = document.getElementById("g-error");
   var submit  = document.getElementById("g-submit");
   var privacyLink = document.getElementById("g-privacy-link");
@@ -886,7 +875,6 @@ window.VHM = {
     if (!validPhone(phone))     { showErr("Số điện thoại không hợp lệ (VD: 0901234567).", phoneI); return; }
     if (!validMacan(macan))     { showErr("Vui lòng nhập mã căn.", macanI); return; }
     if (!validProject(project)) { showErr("Vui lòng nhập tên dự án.", projI); return; }
-    if (!consentI.checked)      { showErr("Vui lòng đồng ý điều khoản để tiếp tục.", null); return; }
 
     submit.disabled = true;
     try {
@@ -902,7 +890,6 @@ window.VHM = {
   phoneI.addEventListener("input", function () { errEl.textContent = ""; phoneI.classList.remove("bad"); });
   macanI.addEventListener("input", function () { errEl.textContent = ""; macanI.classList.remove("bad"); });
   projI.addEventListener("input",  function () { errEl.textContent = ""; projI.classList.remove("bad"); });
-  consentI.addEventListener("change", function () { if (consentI.checked) errEl.textContent = ""; });
 })();
 </script>
 </body>
