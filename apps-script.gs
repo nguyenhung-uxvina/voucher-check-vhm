@@ -29,6 +29,11 @@ function doPost(e) {
       p.event || "",     // H: Sự kiện (truy cập / kết quả / yêu cầu tư vấn)
       p.detail || ""     // I: Chi tiết
     ]);
+    // Giữ số 0 đầu: ép SĐT (B) & Mã căn (C) sang định dạng Văn bản rồi ghi lại
+    var r = sheet.getLastRow();
+    sheet.getRange(r, 2, 1, 2).setNumberFormat("@");
+    sheet.getRange(r, 2).setValue(p.phone || "");
+    sheet.getRange(r, 3).setValue(p.macan || "");
     return ContentService
       .createTextOutput(JSON.stringify({ ok: true }))
       .setMimeType(ContentService.MimeType.JSON);
