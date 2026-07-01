@@ -10,7 +10,8 @@ Có **cổng truy cập mềm**: khách phải nhập **số điện thoại + m
 ## Bước 1 — Tạo nơi lưu thông tin truy cập (Google Sheet + Apps Script)
 
 1. Tạo một **Google Sheet** mới. Dòng đầu (tùy chọn) đặt tiêu đề cột:
-   `Received | Số điện thoại | Mã căn | Client time | User agent | Referrer`
+   `Received | Số điện thoại | Mã căn | Client time | User agent | Referrer | Dự án | Sự kiện | Chi tiết`
+   > Cột **Sự kiện** ghi phễu đo lường: `truy cập` → `kết quả` → `yêu cầu tư vấn` (lead). Cột **Chi tiết** ghi kết quả wizard tương ứng.
 2. Trong Sheet: **Extensions → Apps Script**. Xóa code mẫu, dán toàn bộ nội dung file **`apps-script.gs`**.
 3. Bấm **Deploy → New deployment**. Chọn loại **Web app**:
    - **Execute as:** Me

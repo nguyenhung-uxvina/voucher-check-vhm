@@ -173,6 +173,18 @@
   .bd-pending .bd-body{color:#9A6B12;font-style:italic;}
   .u-note{font-size:12px;color:#9A968A;line-height:1.55;margin:0;}
 
+  /* LEAD CTA (đăng ký tư vấn) */
+  .btn-consult{display:inline-flex;align-items:center;gap:8px;margin-top:14px;background:#C9A34E;color:#0B2E22;border:none;border-radius:10px;padding:13px 22px;font-family:'Be Vietnam Pro',sans-serif;font-size:14.5px;font-weight:600;cursor:pointer;transition:background .15s;}
+  .btn-consult:hover{background:#b8923f;}
+  .consult-done{margin-top:14px;background:#EAF6EF;border:1px solid #BFE3CD;border-radius:10px;padding:13px 16px;font-size:13.5px;line-height:1.55;color:#1B5E3E;}
+
+  /* CONSENT + PRIVACY */
+  .gate-consent{display:flex;align-items:flex-start;gap:9px;margin:2px 0 12px;font-size:12.5px;line-height:1.5;color:#3A4A42;cursor:pointer;}
+  .gate-consent input{width:16px;height:16px;margin-top:2px;flex-shrink:0;accent-color:#0E5C43;cursor:pointer;}
+  .gate-consent a{color:#0E5C43;font-weight:600;cursor:pointer;text-decoration:underline;}
+  .privacy-panel{display:none;background:#F7F4ED;border:1px solid #E7E1D3;border-radius:10px;padding:12px 14px;margin:0 0 14px;font-size:11.5px;line-height:1.6;color:#6A7068;}
+  .privacy-panel.show{display:block;}
+
   /* GATE (access screen) */
   .gate{position:fixed;inset:0;z-index:1000;background:#EDEAE0;display:flex;align-items:center;justify-content:center;padding:20px;overflow:auto;}
   .gate.hidden{display:none;}
@@ -231,8 +243,13 @@
           </datalist>
         </div>
         <div class="gate-error" id="g-error"></div>
+        <label class="gate-consent">
+          <input type="checkbox" id="g-consent" />
+          <span>Tôi đồng ý cho VHM/CĐT/đơn vị tư vấn liên hệ và đồng ý với <a id="g-privacy-link">Điều khoản &amp; Bảo mật</a>.</span>
+        </label>
+        <div class="privacy-panel" id="g-privacy">Công cụ tra cứu Voucher hỗ trợ khách hàng VHM. Thông tin bạn cung cấp (số điện thoại, mã căn, tên dự án) chỉ dùng để xác nhận khách hàng và hỗ trợ tư vấn về chính sách Voucher, được lưu trên bảng tính nội bộ của đơn vị tư vấn. Bằng việc tiếp tục, bạn đồng ý cho VHM/CĐT/đơn vị tư vấn liên hệ với bạn. Bạn có thể yêu cầu xóa thông tin bất cứ lúc nào qua tư vấn viên.</div>
         <button class="gate-submit" type="submit" id="g-submit">Vào công cụ →</button>
-        <p class="gate-note">Thông tin dùng để xác nhận khách hàng và hỗ trợ tư vấn. Bằng việc tiếp tục, bạn đồng ý cho VHM/CĐT liên hệ về chính sách Voucher.</p>
+        <p class="gate-note">Thông tin dùng để xác nhận khách hàng và hỗ trợ tư vấn về chính sách Voucher.</p>
       </form>
     </div>
   </div>
@@ -251,6 +268,33 @@
     </div>
     <div id="view"></div>
   </div>
+
+<script>
+/* ================= SHARED LOGGER (analytics funnel + lead capture) ================= */
+window.VHM = {
+  // Google Apps Script Web App URL (same one used by the access gate). Empty = console only.
+  ENDPOINT: "https://script.google.com/macros/s/AKfycbzfAnJUM_16KPPDrReAt7vqKuPeMCTSPED7qsFW6en3TumTvl-9C0gRf5JC25HoVw-a/exec",
+  HOTLINE: "",                       // tùy chọn: điền hotline để hiện trên nút tư vấn, vd "1900 xxxx"
+  STORAGE_KEY: "vhm_voucher_access",
+  user: function () {
+    try { return JSON.parse(localStorage.getItem(this.STORAGE_KEY) || "{}") || {}; } catch (e) { return {}; }
+  },
+  log: function (event, detail) {
+    var u = this.user();
+    var rec = {
+      phone: u.phone || "", macan: u.macan || "", project: u.project || "",
+      ts: new Date().toISOString(), ua: navigator.userAgent, ref: document.referrer || "",
+      event: event || "", detail: detail || ""
+    };
+    if (!this.ENDPOINT) { console.log("[vhm]", rec); return; }
+    try {
+      var body = new URLSearchParams(rec).toString();
+      if (navigator.sendBeacon) navigator.sendBeacon(this.ENDPOINT, new Blob([body], { type: "application/x-www-form-urlencoded" }));
+      else fetch(this.ENDPOINT, { method: "POST", mode: "no-cors", keepalive: true, headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: body });
+    } catch (e) { console.warn("[vhm] log failed", e); }
+  }
+};
+</script>
 
 <script>
 (function () {
@@ -353,19 +397,32 @@
   };
 
   // ================= STATE =================
-  var state = { tab:'check', nodeId:'proj', history:[], expandedFaq:null, pct:null, projName:null };
+  var state = { tab:'check', nodeId:'proj', history:[], expandedFaq:null, pct:null, projName:null, consultRequested:false };
   var view = document.getElementById('view');
   var keys = ['A','B','C','D'];
+  var loggedResults = {};   // dedup funnel logging per result per session
+
+  function vlog(ev, detail){ if (window.VHM) window.VHM.log(ev, detail || ''); }
+  function maybeLogResult(id){
+    var n = nodes[id];
+    if (n && n.type === 'r' && !loggedResults[id]) { loggedResults[id] = true; vlog('kết quả', n.title); }
+  }
 
   function esc(s){
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
   // ---- transitions ----
-  function go(next){ state.history.push(state.nodeId); state.nodeId = next; render(); }
-  function back(){ if(state.history.length){ state.nodeId = state.history.pop(); render(); } }
-  function restart(){ state.nodeId = 'proj'; state.history = []; state.pct = null; state.projName = null; render(); }
+  function go(next){ state.history.push(state.nodeId); state.nodeId = next; state.consultRequested = false; maybeLogResult(next); render(); }
+  function back(){ if(state.history.length){ state.nodeId = state.history.pop(); state.consultRequested = false; render(); } }
+  function restart(){ state.nodeId = 'proj'; state.history = []; state.pct = null; state.projName = null; state.consultRequested = false; render(); }
   function setTab(t){ state.tab = t; render(); }
+  function requestConsult(){
+    var n = nodes[state.nodeId];
+    vlog('yêu cầu tư vấn', n && n.title ? n.title : '');
+    state.consultRequested = true;
+    render();
+  }
   function chooseProject(){
     var sel = document.getElementById('proj-select');
     if (!sel || !sel.value) return;
@@ -457,6 +514,12 @@
       html +=       '<button class="btn-secondary" data-back="1">← Quay lại</button>';
       html +=       '<button class="btn-ghost" data-tabgo="usage">Xem cách dùng Voucher →</button>';
       html +=     '</div>';
+      if (state.consultRequested){
+        var hot = (window.VHM && window.VHM.HOTLINE) ? ' Hoặc gọi ngay: <b>' + esc(window.VHM.HOTLINE) + '</b>.' : '';
+        html +=   '<div class="consult-done">✓ Đã ghi nhận yêu cầu. Tư vấn viên sẽ liên hệ với bạn trong thời gian sớm nhất.' + hot + '</div>';
+      } else {
+        html +=   '<button class="btn-consult" data-consult="1">📞 Đăng ký nhận tư vấn / gọi lại</button>';
+      }
       html +=   '</div>';
       html += '</div>';
     }
@@ -584,9 +647,10 @@
 
   // ================= EVENT DELEGATION =================
   document.addEventListener('click', function(e){
-    var el = e.target.closest ? e.target.closest('[data-tab],[data-go],[data-back],[data-restart],[data-ref],[data-tabgo],[data-faq],[data-proj-continue]') : null;
+    var el = e.target.closest ? e.target.closest('[data-tab],[data-go],[data-back],[data-restart],[data-ref],[data-tabgo],[data-faq],[data-proj-continue],[data-consult]') : null;
     if (!el) return;
     if (el.hasAttribute('data-tab'))          { setTab(el.getAttribute('data-tab')); return; }
+    if (el.hasAttribute('data-consult'))      { requestConsult(); return; }
     if (el.hasAttribute('data-proj-continue')){ chooseProject(); return; }
     if (el.hasAttribute('data-go'))           { go(el.getAttribute('data-go')); return; }
     if (el.hasAttribute('data-back'))    { back(); return; }
@@ -605,19 +669,19 @@
 (function () {
   "use strict";
 
-  // ▼▼▼ PASTE your Google Apps Script Web App URL between the quotes to log accesses.
-  //     Leave empty to run the gate without logging (entries print to the console only).
-  var LOG_ENDPOINT = "https://script.google.com/macros/s/AKfycbzfAnJUM_16KPPDrReAt7vqKuPeMCTSPED7qsFW6en3TumTvl-9C0gRf5JC25HoVw-a/exec";
-  // ▲▲▲  (setup steps are in README.md)
+  var STORAGE_KEY = (window.VHM && window.VHM.STORAGE_KEY) || "vhm_voucher_access";
+  var gate    = document.getElementById("gate");
+  var form    = document.getElementById("gate-form");
+  var phoneI  = document.getElementById("g-phone");
+  var macanI  = document.getElementById("g-macan");
+  var projI   = document.getElementById("g-project");
+  var consentI= document.getElementById("g-consent");
+  var errEl   = document.getElementById("g-error");
+  var submit  = document.getElementById("g-submit");
+  var privacyLink = document.getElementById("g-privacy-link");
+  var privacyPanel = document.getElementById("g-privacy");
 
-  var STORAGE_KEY = "vhm_voucher_access";
-  var gate   = document.getElementById("gate");
-  var form   = document.getElementById("gate-form");
-  var phoneI = document.getElementById("g-phone");
-  var macanI = document.getElementById("g-macan");
-  var projI  = document.getElementById("g-project");
-  var errEl  = document.getElementById("g-error");
-  var submit = document.getElementById("g-submit");
+  if (privacyLink) privacyLink.addEventListener("click", function () { privacyPanel.classList.toggle("show"); });
 
   // Returning device — skip the gate.
   try { if (localStorage.getItem(STORAGE_KEY)) { gate.classList.add("hidden"); return; } } catch (e) {}
@@ -638,39 +702,21 @@
     if (el) { el.classList.add("bad"); el.focus(); }
   }
 
-  function logAccess(rec) {
-    if (!LOG_ENDPOINT) { console.log("[voucher-access]", rec); return; }
-    try {
-      var body = new URLSearchParams(rec).toString();
-      if (navigator.sendBeacon) {
-        navigator.sendBeacon(LOG_ENDPOINT, new Blob([body], { type: "application/x-www-form-urlencoded" }));
-      } else {
-        fetch(LOG_ENDPOINT, {
-          method: "POST", mode: "no-cors", keepalive: true,
-          headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: body
-        });
-      }
-    } catch (e) { console.warn("[voucher-access] log failed", e); }
-  }
-
   form.addEventListener("submit", function (e) {
     e.preventDefault();
     var phone = phoneI.value, macan = macanI.value, project = projI.value;
     if (!validPhone(phone))     { showErr("Số điện thoại không hợp lệ (VD: 0901234567).", phoneI); return; }
     if (!validMacan(macan))     { showErr("Vui lòng nhập mã căn.", macanI); return; }
     if (!validProject(project)) { showErr("Vui lòng nhập tên dự án.", projI); return; }
+    if (!consentI.checked)      { showErr("Vui lòng đồng ý điều khoản để tiếp tục.", null); return; }
 
     submit.disabled = true;
-    var rec = {
-      phone: normPhone(phone),
-      macan: macan.trim(),
-      project: project.trim(),
-      ts: new Date().toISOString(),
-      ua: navigator.userAgent,
-      ref: document.referrer || ""
-    };
-    logAccess(rec);
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ phone: rec.phone, macan: rec.macan, project: rec.project, ts: rec.ts })); } catch (e) {}
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        phone: normPhone(phone), macan: macan.trim(), project: project.trim(), ts: new Date().toISOString()
+      }));
+    } catch (e) {}
+    if (window.VHM) window.VHM.log("truy cập", "");   // funnel: entry
     gate.classList.add("hidden");
   });
 
@@ -678,6 +724,7 @@
   phoneI.addEventListener("input", function () { errEl.textContent = ""; phoneI.classList.remove("bad"); });
   macanI.addEventListener("input", function () { errEl.textContent = ""; macanI.classList.remove("bad"); });
   projI.addEventListener("input",  function () { errEl.textContent = ""; projI.classList.remove("bad"); });
+  consentI.addEventListener("change", function () { if (consentI.checked) errEl.textContent = ""; });
 })();
 </script>
 </body>
