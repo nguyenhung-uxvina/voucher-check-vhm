@@ -4,7 +4,7 @@
  *
  * SETUP (see README.md for the full walk-through):
  *   1. Create a Google Sheet. In the first row add headers:
- *        A1: Received   B1: Số điện thoại   C1: Mã căn   D1: Client time   E1: User agent   F1: Referrer
+ *        A1: Received   B1: Số điện thoại   C1: Mã căn   D1: Client time   E1: User agent   F1: Referrer   G1: Dự án
  *   2. Extensions → Apps Script. Delete any sample code, paste this file.
  *   3. Deploy → New deployment → type "Web app".
  *        Execute as: Me      Who has access: Anyone
@@ -23,7 +23,8 @@ function doPost(e) {
       p.macan || "",
       p.ts || "",        // client ISO time
       p.ua || "",
-      p.ref || ""
+      p.ref || "",
+      p.project || ""    // G: Dự án
     ]);
     return ContentService
       .createTextOutput(JSON.stringify({ ok: true }))

@@ -200,7 +200,7 @@
       <div class="gate-head">
         <div class="eyebrow"><span class="rule"></span>Chính sách Voucher · VHM</div>
         <div class="gate-title">Xác nhận thông tin truy cập</div>
-        <p class="gate-sub">Vui lòng cung cấp số điện thoại và mã căn để vào công cụ kiểm tra &amp; tra cứu Voucher.</p>
+        <p class="gate-sub">Vui lòng cung cấp số điện thoại, mã căn và tên dự án để vào công cụ kiểm tra &amp; tra cứu Voucher.</p>
       </div>
       <form class="gate-body" id="gate-form" novalidate>
         <div class="field">
@@ -210,6 +210,25 @@
         <div class="field">
           <label for="g-macan">Mã căn</label>
           <input id="g-macan" type="text" autocomplete="off" placeholder="VD: OS1-05-12 hoặc A-1508" />
+        </div>
+        <div class="field">
+          <label for="g-project">Tên dự án</label>
+          <input id="g-project" type="text" autocomplete="off" list="g-proj-list" placeholder="VD: VHM Ocean Park 2-3, Vũ Yên..." />
+          <datalist id="g-proj-list">
+            <option value="VHM Ocean Park 2-3"></option>
+            <option value="VHM Vũ Yên"></option>
+            <option value="Dương Kinh"></option>
+            <option value="Smart City"></option>
+            <option value="Cổ Loa"></option>
+            <option value="VW Phú Quốc"></option>
+            <option value="GW Phú Quốc"></option>
+            <option value="Quảng Trị"></option>
+            <option value="Bắc Luân"></option>
+            <option value="VHM Cần Giờ"></option>
+            <option value="VHM Quận 9"></option>
+            <option value="VHM Đan Phượng"></option>
+            <option value="Hậu Nghĩa"></option>
+          </datalist>
         </div>
         <div class="gate-error" id="g-error"></div>
         <button class="gate-submit" type="submit" id="g-submit">Vào công cụ →</button>
@@ -596,6 +615,7 @@
   var form   = document.getElementById("gate-form");
   var phoneI = document.getElementById("g-phone");
   var macanI = document.getElementById("g-macan");
+  var projI  = document.getElementById("g-project");
   var errEl  = document.getElementById("g-error");
   var submit = document.getElementById("g-submit");
 
@@ -610,10 +630,11 @@
   }
   function validPhone(v) { return /^0\d{9}$/.test(normPhone(v)); }         // VN mobile: 10 digits, leading 0
   function validMacan(v) { return (v || "").trim().length >= 2; }
+  function validProject(v) { return (v || "").trim().length >= 2; }
 
   function showErr(msg, el) {
     errEl.textContent = msg;
-    phoneI.classList.remove("bad"); macanI.classList.remove("bad");
+    phoneI.classList.remove("bad"); macanI.classList.remove("bad"); projI.classList.remove("bad");
     if (el) { el.classList.add("bad"); el.focus(); }
   }
 
@@ -634,26 +655,29 @@
 
   form.addEventListener("submit", function (e) {
     e.preventDefault();
-    var phone = phoneI.value, macan = macanI.value;
-    if (!validPhone(phone)) { showErr("Số điện thoại không hợp lệ (VD: 0901234567).", phoneI); return; }
-    if (!validMacan(macan)) { showErr("Vui lòng nhập mã căn.", macanI); return; }
+    var phone = phoneI.value, macan = macanI.value, project = projI.value;
+    if (!validPhone(phone))     { showErr("Số điện thoại không hợp lệ (VD: 0901234567).", phoneI); return; }
+    if (!validMacan(macan))     { showErr("Vui lòng nhập mã căn.", macanI); return; }
+    if (!validProject(project)) { showErr("Vui lòng nhập tên dự án.", projI); return; }
 
     submit.disabled = true;
     var rec = {
       phone: normPhone(phone),
       macan: macan.trim(),
+      project: project.trim(),
       ts: new Date().toISOString(),
       ua: navigator.userAgent,
       ref: document.referrer || ""
     };
     logAccess(rec);
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ phone: rec.phone, macan: rec.macan, ts: rec.ts })); } catch (e) {}
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ phone: rec.phone, macan: rec.macan, project: rec.project, ts: rec.ts })); } catch (e) {}
     gate.classList.add("hidden");
   });
 
   // clear the error as the user corrects input
   phoneI.addEventListener("input", function () { errEl.textContent = ""; phoneI.classList.remove("bad"); });
   macanI.addEventListener("input", function () { errEl.textContent = ""; macanI.classList.remove("bad"); });
+  projI.addEventListener("input",  function () { errEl.textContent = ""; projI.classList.remove("bad"); });
 })();
 </script>
 </body>
