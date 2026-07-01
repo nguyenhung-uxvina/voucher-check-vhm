@@ -27,7 +27,7 @@ node harness/verify.mjs        # phải PASS (exit 0). ERR => sửa, đừng com
 ```
 Nếu anh **chạm mảng `kb`, `groups`, hoặc bất kỳ số liệu/nội dung chính sách nào**:
 - Đối chiếu với `policy.lock.md` (nguồn chân lý). HTML phải khớp file đó.
-- (Bước 2, khi có) chạy thêm `node harness/eval-policy.mjs` — trọng tài LLM xét đúng luật.
+- chạy thêm `node harness/eval-policy.mjs` — trọng tài LLM (Claude) xét đúng luật vs `policy.lock.md`. Cần `ANTHROPIC_API_KEY`; fail-closed nếu thiếu (đặt `HARNESS_SKIP_INFERENTIAL=1` để cố ý bỏ qua ở local).
 - Con người (kỹ sư định danh) ký kết luận pháp lý cuối, không giao cho LLM.
 
 ## Improvement Engine — luật vàng

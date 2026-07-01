@@ -18,16 +18,16 @@ Có **cổng truy cập mềm**: khách phải nhập **số điện thoại + m
    - **Who has access:** **Anyone**
 4. **Authorize** khi được hỏi (chọn tài khoản Google của bạn → Advanced → Allow).
 5. Copy **Web app URL** (kết thúc bằng `/exec`).
-6. Mở **`index.html`**, tìm dòng:
+6. Mở **`index.html`**, tìm khối `window.VHM = {` và sửa dòng:
    ```js
-   var LOG_ENDPOINT = "";
+   ENDPOINT: "",
    ```
    Dán URL vào giữa hai dấu ngoặc kép:
    ```js
-   var LOG_ENDPOINT = "https://script.google.com/macros/s/AKfy.../exec";
+   ENDPOINT: "https://script.google.com/macros/s/AKfy.../exec",
    ```
 
-> Để trống `LOG_ENDPOINT` thì cổng vẫn hoạt động nhưng **không ghi log** (chỉ in ra console). Hữu ích khi test.
+> Để trống `ENDPOINT` thì cổng vẫn hoạt động nhưng **không ghi log** (chỉ in ra console). Hữu ích khi test.
 
 **Kiểm tra nhanh:** mở URL `/exec` trên trình duyệt — thấy dòng *"Voucher access logger is running."* là đạt.
 

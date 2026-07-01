@@ -1,0 +1,75 @@
+name: harness
+
+# Gate cưỡng chế: verify.mjs (tất định) luôn chạy; eval-policy.mjs (LLM trọng tài)
+# chạy khi nội dung chính sách đổi. Deploy GitHub Pages CHỈ khi harness PASS.
+#
+# ⚠ Cài đặt 1 lần để Gate thực sự chặn được deploy:
+#   1. Settings → Pages → Source = "GitHub Actions" (bỏ deploy-from-branch cũ).
+#   2. Settings → Secrets and variables → Actions → thêm secret ANTHROPIC_API_KEY.
+# Chưa làm (1) thì workflow vẫn chạy như một check, nhưng bản deploy nhánh cũ không bị chặn.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  harness:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Computational Sensor (tất định)
+        run: node harness/verify.mjs
+
+      - name: Nội dung chính sách có đổi không?
+        id: policy
+        shell: bash
+        run: |
+          if git rev-parse HEAD~1 >/dev/null 2>&1 && \
+             git diff --name-only HEAD~1 HEAD | grep -qE '^(index\.html|policy\.lock\.md)$'; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Inferential Gate (LLM trọng tài — chỉ khi chính sách đổi)
+        if: steps.policy.outputs.changed == 'true'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: node harness/eval-policy.mjs
+
+  deploy:
+    needs: harness
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Assemble site (chỉ đăng index.html + CNAME)
+        run: |
+          mkdir -p _site
+          cp index.html CNAME _site/
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deploy
+        uses: actions/deploy-pages@v4
