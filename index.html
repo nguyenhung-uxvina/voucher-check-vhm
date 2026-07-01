@@ -139,6 +139,40 @@
   .faq-item.flash{animation:flash 1.4s ease-out;}
   @keyframes flash{0%{background:#FBF4E3;}100%{background:#fff;}}
 
+  /* PROJECT SELECT (wizard step 0) */
+  .proj-select{width:100%;border:1.5px solid #DDE3DB;border-radius:12px;padding:14px 15px;font-family:'Be Vietnam Pro',sans-serif;font-size:15px;color:#233028;background:#FAFBF9;outline:none;margin-bottom:18px;}
+  .proj-select:focus{border-color:#1E8C5A;}
+
+  /* ELIGIBLE VALUE LINE */
+  .result-value{background:#EAF6EF;border:1px solid #BFE3CD;border-radius:10px;padding:13px 16px;margin:0 0 20px;font-size:14.5px;line-height:1.55;color:#1B5E3E;}
+  .result-value b{font-size:16px;}
+  .result-value .proj{display:block;font-size:12.5px;color:#4A7A5F;margin-top:3px;}
+
+  /* USAGE TAB */
+  .usage{display:flex;flex-direction:column;gap:18px;}
+  .u-card{background:#fff;border:1px solid #E7E1D3;border-radius:14px;padding:20px 22px;box-shadow:0 2px 10px rgba(11,36,27,0.05);}
+  .u-card h3{font-family:'Lora',serif;font-size:17px;font-weight:600;color:#0B241B;margin:0 0 12px;display:flex;align-items:center;gap:9px;}
+  .u-card h3 .ic{width:26px;height:26px;border-radius:8px;background:#E6F1EA;color:#0E5C43;display:inline-flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+  .u-card p{font-size:14px;line-height:1.65;color:#3A4A42;margin:0 0 10px;}
+  .u-card p:last-child{margin-bottom:0;}
+  .u-card ul{margin:0;padding-left:20px;}
+  .u-card li{font-size:14px;line-height:1.62;color:#3A4A42;margin-bottom:6px;}
+  .u-card li:last-child{margin-bottom:0;}
+  .tier{display:flex;gap:14px;padding:12px 0;border-bottom:1px solid #F0ECE0;}
+  .tier:last-child{border-bottom:none;padding-bottom:0;}
+  .tier .pct{flex-shrink:0;width:56px;font-family:'Lora',serif;font-size:22px;font-weight:700;color:#0E5C43;}
+  .tier .plist{font-size:13.5px;line-height:1.55;color:#3A4A42;}
+  .tier .gname{font-weight:600;color:#0B241B;display:block;margin-bottom:3px;font-size:12.5px;}
+  .bd{display:flex;flex-direction:column;gap:10px;}
+  .bd-row{border:1px solid #E2E6DE;border-radius:10px;overflow:hidden;}
+  .bd-head{background:#F1F5F1;padding:11px 15px;font-weight:600;font-size:13.5px;color:#0B241B;}
+  .bd-body{padding:13px 15px;font-size:13.5px;line-height:1.6;color:#3A4A42;}
+  .bd-body b{color:#0B241B;}
+  .bd-opt{margin-top:9px;padding-left:12px;border-left:2px solid #CBDBD1;}
+  .bd-pending .bd-head{background:#F6EBCF;color:#9A6B12;}
+  .bd-pending .bd-body{color:#9A6B12;font-style:italic;}
+  .u-note{font-size:12px;color:#9A968A;line-height:1.55;margin:0;}
+
   /* GATE (access screen) */
   .gate{position:fixed;inset:0;z-index:1000;background:#EDEAE0;display:flex;align-items:center;justify-content:center;padding:20px;overflow:auto;}
   .gate.hidden{display:none;}
@@ -189,9 +223,10 @@
     <div class="header">
       <div class="eyebrow"><span class="rule"></span>Chính sách Voucher · VHM</div>
       <h1>Kiểm tra &amp; Hỏi đáp Voucher</h1>
-      <p>Tự kiểm tra căn hộ của bạn có đủ điều kiện nhận Voucher, hoặc tra cứu toàn bộ câu hỏi về chính sách tặng &amp; sử dụng Voucher.</p>
+      <p>Tự kiểm tra căn hộ của bạn có đủ điều kiện nhận Voucher, xem cách dùng, hoặc tra cứu toàn bộ câu hỏi về chính sách tặng &amp; sử dụng Voucher.</p>
       <div class="tabs">
         <button class="tab" data-tab="check">Kiểm tra điều kiện</button>
+        <button class="tab" data-tab="usage">Cách dùng Voucher</button>
         <button class="tab" data-tab="faq">Tra cứu câu hỏi</button>
       </div>
     </div>
@@ -231,8 +266,28 @@
   };
   var dots = { yes:'#1E8C5A', no:'#C0392B', cond:'#C9962A', cases:'#3A7CB0', info:'#3A7CB0' };
 
+  // ================= VOUCHER VALUE TIERS (theo dự án) =================
+  var groups = {
+    n1: { pct:'10%', label:'Nhóm 1 · 10%', projects:[
+      'VHM Ocean Park 2-3 (thấp tầng) — trừ Vịnh Xanh',
+      'VHM Vũ Yên (thấp tầng)',
+      'Dương Kinh',
+      'TMDV & shop chân đế NĐX: Cổ Loa, OCP1, OCP2-3, Smart City',
+      'VW Phú Quốc · GW Phú Quốc',
+      'Quảng Trị',
+      'Bắc Luân'
+    ]},
+    n2: { pct:'8%', label:'Nhóm 2 · 8%', projects:[
+      'VHM Cần Giờ (thấp tầng)',
+      'VHM Quận 9 (thấp tầng & TMDV)',
+      'VHM Đan Phượng (thấp tầng)',
+      'Hậu Nghĩa'
+    ]}
+  };
+
   // ================= WIZARD NODES =================
   var nodes = {
+    proj: { type:'select', crumb:'Dự án của bạn', q:'Căn hộ / BĐS của bạn thuộc dự án nào?' },
     start: { type:'q', crumb:'Tình huống của bạn', q:'Tình huống hiện tại của bạn là gì?', opts:[
       { label:'Tôi là người mua ban đầu, chưa chuyển nhượng căn', next:'buyer_sign' },
       { label:'Tôi mua lại / nhận chuyển nhượng căn từ người khác', next:'transferee' },
@@ -274,11 +329,12 @@
     r_yes_transferee: { type:'r', tone:'yes', title:'Bạn (bên nhận chuyển nhượng) được nhận Voucher', detail:'Do bạn đã ký HĐMB/HĐCN và được CĐT xác nhận chuyển nhượng, hoặc sổ đỏ đã sang tên cho bạn trước thời điểm phát Voucher.', refs:[21,22] },
     r_no_transferee: { type:'r', tone:'no', title:'Voucher không thuộc về bạn', detail:'Do chưa hoàn tất thủ tục (chưa được CĐT XNCN / sổ chưa sang tên) trước thời điểm phát Voucher, nên Voucher sẽ được phát cho bên bán (người mua ban đầu).', refs:[21,22] },
     r_seller_keep: { type:'r', tone:'yes', title:'Voucher vẫn thuộc về bạn', detail:'Bạn vẫn là chủ sở hữu hợp lệ tại thời điểm phát Voucher (15/7) nên Voucher được tặng cho bạn. Lưu ý: Voucher KHÔNG được chuyển nhượng cho bên mua.', refs:[20,22] },
-    r_seller_lose: { type:'r', tone:'info', title:'Voucher thuộc về bên mua', detail:'Bên mua đã hoàn tất sở hữu (được XNCN / sổ đã sang tên) trước thời điểm phát Voucher nên họ là người được nhận Voucher.', refs:[21,22] }
+    r_seller_lose: { type:'r', tone:'info', title:'Voucher thuộc về bên mua', detail:'Bên mua đã hoàn tất sở hữu (được XNCN / sổ đã sang tên) trước thời điểm phát Voucher nên họ là người được nhận Voucher.', refs:[21,22] },
+    r_no_project: { type:'r', tone:'no', title:'Dự án chưa thuộc diện tặng Voucher', detail:'Theo chính sách, chỉ các dự án thuộc Nhóm 1 (10%) và Nhóm 2 (8%) mới được tặng Voucher. Dự án bạn chọn hiện không nằm trong danh sách hai nhóm này. Vui lòng liên hệ tư vấn viên/CĐT để được xác nhận chính xác cho trường hợp của bạn.', refs:[] }
   };
 
   // ================= STATE =================
-  var state = { tab:'check', nodeId:'start', history:[], expandedFaq:null };
+  var state = { tab:'check', nodeId:'proj', history:[], expandedFaq:null, pct:null, projName:null };
   var view = document.getElementById('view');
   var keys = ['A','B','C','D'];
 
@@ -289,8 +345,17 @@
   // ---- transitions ----
   function go(next){ state.history.push(state.nodeId); state.nodeId = next; render(); }
   function back(){ if(state.history.length){ state.nodeId = state.history.pop(); render(); } }
-  function restart(){ state.nodeId = 'start'; state.history = []; render(); }
+  function restart(){ state.nodeId = 'proj'; state.history = []; state.pct = null; state.projName = null; render(); }
   function setTab(t){ state.tab = t; render(); }
+  function chooseProject(){
+    var sel = document.getElementById('proj-select');
+    if (!sel || !sel.value) return;
+    if (sel.value === 'other') { state.pct = null; state.projName = null; go('r_no_project'); return; }
+    var g = groups[sel.value];
+    state.pct = g ? g.pct : null;
+    state.projName = sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].text : null;
+    go('start');
+  }
   function openFaq(num){
     state.tab = 'faq'; state.expandedFaq = num; render();
     var el = document.getElementById('faq-' + num);
@@ -300,9 +365,31 @@
 
   // ================= RENDERERS =================
   function renderCheck(){
-    var raw = nodes[state.nodeId] || nodes.start;
+    var raw = nodes[state.nodeId] || nodes.proj;
     var html = '';
-    if (raw.type === 'q'){
+    if (raw.type === 'select'){
+      html += '<div class="card pad">';
+      html +=   '<div class="q-meta">';
+      html +=     '<span class="step-chip">Bước ' + (state.history.length + 1) + '</span>';
+      html +=     '<span class="crumb">' + esc(raw.crumb) + '</span>';
+      html +=   '</div>';
+      html +=   '<p class="q-text">' + esc(raw.q) + '</p>';
+      html +=   '<select class="proj-select" id="proj-select">';
+      html +=     '<option value="" disabled selected>— Chọn dự án —</option>';
+      Object.keys(groups).forEach(function(k){
+        html += '<optgroup label="' + esc(groups[k].label) + '">';
+        groups[k].projects.forEach(function(p){
+          html += '<option value="' + k + '">' + esc(p) + '</option>';
+        });
+        html += '</optgroup>';
+      });
+      html +=     '<option value="other">Dự án khác / không có trong danh sách</option>';
+      html +=   '</select>';
+      html +=   '<div class="opts"><button class="opt" data-proj-continue="1" style="justify-content:center;"><span>Tiếp tục →</span></button></div>';
+      html += '</div>';
+      html += '<p class="foot-note">Giá trị Voucher phụ thuộc dự án: Nhóm 1 = 10%, Nhóm 2 = 8% giá trị BĐS (chưa gồm VAT &amp; KPBT).</p>';
+      return html;
+    } else if (raw.type === 'q'){
       html += '<div class="card pad">';
       html +=   '<div class="q-meta">';
       html +=     '<span class="step-chip">Bước ' + (state.history.length + 1) + '</span>';
@@ -333,16 +420,23 @@
       html +=   '</div>';
       html +=   '<div class="result-body">';
       html +=     '<p class="result-detail">' + esc(raw.detail) + '</p>';
-      html +=     '<div class="refs"><span class="label">Căn cứ:</span>';
-      raw.refs.forEach(function(n){
-        html += '<button class="ref-btn" data-ref="' + n + '">Câu ' + n + ' →</button>';
-      });
-      html +=     '</div>';
+      if ((raw.tone === 'yes' || raw.tone === 'cond') && state.pct){
+        html +=   '<div class="result-value">Giá trị Voucher dự kiến: <b>' + esc(state.pct) + '</b> giá trị BĐS đang sở hữu (chưa gồm VAT &amp; KPBT).'
+               +    (state.projName ? '<span class="proj">Dự án: ' + esc(state.projName) + '</span>' : '')
+               +  '</div>';
+      }
+      if (raw.refs && raw.refs.length){
+        html +=   '<div class="refs"><span class="label">Căn cứ:</span>';
+        raw.refs.forEach(function(n){
+          html += '<button class="ref-btn" data-ref="' + n + '">Câu ' + n + ' →</button>';
+        });
+        html +=   '</div>';
+      }
       html +=     '<div class="disclaimer"><p>Kết quả mang tính tham khảo theo bộ Q&amp;A. Việc áp dụng chính thức căn cứ theo chính sách chương trình và các điều khoản tại HĐMB; trường hợp đặc thù do CĐT/VHM trình duyệt.</p></div>';
       html +=     '<div class="actions">';
       html +=       '<button class="btn-primary" data-restart="1">Kiểm tra lại từ đầu</button>';
       html +=       '<button class="btn-secondary" data-back="1">← Quay lại</button>';
-      html +=       '<button class="btn-ghost" data-tabgo="faq">Còn thắc mắc? Tra cứu câu hỏi →</button>';
+      html +=       '<button class="btn-ghost" data-tabgo="usage">Xem cách dùng Voucher →</button>';
       html +=     '</div>';
       html +=   '</div>';
       html += '</div>';
@@ -364,6 +458,80 @@
     if (open){
       html += '<div class="faq-a"><p>' + esc(item.a) + '</p></div>';
     }
+    html += '</div>';
+    return html;
+  }
+
+  function renderUsage(){
+    var html = '<div class="usage">';
+
+    // 1 — Value tiers
+    html += '<div class="u-card">';
+    html +=   '<h3><span class="ic">%</span>Giá trị Voucher theo dự án</h3>';
+    html +=   '<p style="margin-bottom:6px;">Khách đã mua BĐS VHM trước 20/06/2026 &amp; thanh toán tối thiểu 20% được tặng <b>1 Voucher / 1 BĐS</b>, giá trị theo dự án:</p>';
+    Object.keys(groups).forEach(function(k){
+      html += '<div class="tier"><span class="pct">' + esc(groups[k].pct) + '</span><div class="plist"><span class="gname">' + esc(groups[k].label) + '</span>' + groups[k].projects.map(esc).join(' · ') + '</div></div>';
+    });
+    html +=   '<p class="u-note" style="margin-top:10px;">Giá trị tính theo Giá trị BĐS đang sở hữu — <b>không gồm VAT và KPBT</b>. Dự án ngoài 2 nhóm trên: không thuộc diện tặng Voucher.</p>';
+    html += '</div>';
+
+    // 2 — Cách tính giá trị
+    html += '<div class="u-card">';
+    html +=   '<h3><span class="ic">₫</span>Cách tính giá trị Voucher</h3>';
+    html +=   '<ul>';
+    html +=     '<li>Tính theo <b>giá HĐMB/HĐCN khách lẻ đầu tiên</b> của CĐT. Trường hợp khách lẻ chuyển nhượng thì <b>vẫn tính theo giá HĐMB/HĐCN</b>, không theo giá chuyển nhượng giữa 2 bên.</li>';
+    html +=     '<li>Với các <b>căn giãn xây</b>: giá trị Voucher (hay tỷ lệ quy định) chỉ tính theo <b>Giá trị Đất và Thương mại</b>.</li>';
+    html +=   '</ul>';
+    html += '</div>';
+
+    // 3 — Quyền lợi & đối tượng
+    html += '<div class="u-card">';
+    html +=   '<h3><span class="ic">✦</span>Quyền lợi &amp; đối tượng được dùng</h3>';
+    html +=   '<ul>';
+    html +=     '<li>Voucher có <b>giá trị bằng tiền</b>, dùng thanh toán khi <b>mua BĐS mới</b> tại các dự án Vinhomes đang mở bán <b>từ 01/01/2026 đến hết 31/12/2026</b>.</li>';
+    html +=     '<li>Sử dụng <b>đích danh</b> cho: bản thân hoặc vợ/chồng, tứ thân phụ mẫu, con cái, anh chị em ruột của 2 vợ chồng.</li>';
+    html +=   '</ul>';
+    html += '</div>';
+
+    // 4 — Quy định sử dụng
+    html += '<div class="u-card">';
+    html +=   '<h3><span class="ic">§</span>Quy định sử dụng</h3>';
+    html +=   '<ul>';
+    html +=     '<li>Giá trị Voucher áp dụng thanh toán <b>không vượt quá 30%</b> giá trị HĐMB/HĐCN của 1 BĐS mua mới (các DA thấp tầng, TMDV của VHM).</li>';
+    html +=     '<li><b>Mỗi BĐS mua mới chỉ dùng 1 Voucher.</b> Nếu không dùng hết giá trị Voucher vào 1 BĐS, phần còn lại được dùng để mua thêm BĐS khác.</li>';
+    html +=     '<li>Xử lý phần <b>dư/thừa</b>: căn <b>mua mới</b> (từ 20/6) → hoàn <b>tiền mặt</b> hoặc trừ vào các đợt sau; áp Voucher vào <b>căn đã mua</b> (diện backdate) → CĐT hoàn bằng <b>điểm Vpoint</b>, không hoàn tiền.</li>';
+    html +=   '</ul>';
+    html += '</div>';
+
+    // 5 — Mua được gì
+    html += '<div class="u-card">';
+    html +=   '<h3><span class="ic">◎</span>Dự án có thể dùng Voucher để mua</h3>';
+    html +=   '<p>Tất cả các dự án của Vinhomes, <b>trừ chung cư, slot đỗ xe, NOXH</b>.</p>';
+    html += '</div>';
+
+    // 6 — Hạn chế chuyển nhượng
+    html += '<div class="u-card">';
+    html +=   '<h3><span class="ic">⏳</span>Hạn chế chuyển nhượng</h3>';
+    html +=   '<p>BĐS mua mới thanh toán bằng Voucher sẽ bị <b>hạn chế chuyển nhượng</b> theo quy định của CĐT công bố — <b>dự kiến 6 tháng</b>.</p>';
+    html += '</div>';
+
+    // 7 — Backdate matrix
+    html += '<div class="u-card">';
+    html +=   '<h3><span class="ic">⇄</span>Áp dụng backdate cho khách mua 01/01–20/06/2026</h3>';
+    html +=   '<div class="bd">';
+    html +=     '<div class="bd-row"><div class="bd-head">TH1 · Đã mua 1 căn thuộc nhóm được tặng VC</div>'
+             +    '<div class="bd-body">Được <b>1 Voucher</b>. Nếu chưa mua căn thứ 2 → dùng Voucher đó để <b>mua căn thứ 2</b> (căn mua mới).</div></div>';
+    html +=     '<div class="bd-row"><div class="bd-head">TH2 · Đã mua 2 căn: 1 căn thuộc nhóm tặng VC + 1 căn không thuộc nhóm</div>'
+             +    '<div class="bd-body">Được <b>1 Voucher</b> (từ căn thuộc nhóm). Hai lựa chọn:'
+             +      '<div class="bd-opt"><b>Cách A —</b> Không áp VC vào căn 2 → dùng Voucher để <b>mua căn mới</b> (căn 3).</div>'
+             +      '<div class="bd-opt"><b>Cách B —</b> Áp VC vào <b>căn 2</b>: chỉ trừ tối đa <b>30%</b> giá trị căn 2; phần dư CĐT <b>hoàn Vpoint</b> (không hoàn tiền); còn dư nữa thì dùng sang căn sau.</div>'
+             +    '</div></div>';
+    html +=     '<div class="bd-row bd-pending"><div class="bd-head">TH3 · Đã mua 2 căn và được tặng 2 VC</div>'
+             +    '<div class="bd-body">Đang cập nhật nội dung chính thức — vui lòng liên hệ tư vấn viên/CĐT. (Chờ CEO xác nhận để đưa vào công cụ.)</div></div>';
+    html +=   '</div>';
+    html += '</div>';
+
+    html +=   '<p class="foot-note">Tổng hợp theo chính sách tặng &amp; sử dụng Voucher VHM (Nội dung 1 &amp; 2 + bảng backdate). Trường hợp cụ thể do CĐT/VHM trình duyệt.</p>';
     html += '</div>';
     return html;
   }
@@ -390,15 +558,18 @@
     for (var i=0;i<tabBtns.length;i++){
       tabBtns[i].classList.toggle('active', tabBtns[i].getAttribute('data-tab') === state.tab);
     }
-    view.innerHTML = state.tab === 'check' ? renderCheck() : renderFaq();
+    view.innerHTML = state.tab === 'check' ? renderCheck()
+                   : state.tab === 'usage' ? renderUsage()
+                   : renderFaq();
   }
 
   // ================= EVENT DELEGATION =================
   document.addEventListener('click', function(e){
-    var el = e.target.closest ? e.target.closest('[data-tab],[data-go],[data-back],[data-restart],[data-ref],[data-tabgo],[data-faq]') : null;
+    var el = e.target.closest ? e.target.closest('[data-tab],[data-go],[data-back],[data-restart],[data-ref],[data-tabgo],[data-faq],[data-proj-continue]') : null;
     if (!el) return;
-    if (el.hasAttribute('data-tab'))     { setTab(el.getAttribute('data-tab')); return; }
-    if (el.hasAttribute('data-go'))      { go(el.getAttribute('data-go')); return; }
+    if (el.hasAttribute('data-tab'))          { setTab(el.getAttribute('data-tab')); return; }
+    if (el.hasAttribute('data-proj-continue')){ chooseProject(); return; }
+    if (el.hasAttribute('data-go'))           { go(el.getAttribute('data-go')); return; }
     if (el.hasAttribute('data-back'))    { back(); return; }
     if (el.hasAttribute('data-restart')) { restart(); return; }
     if (el.hasAttribute('data-tabgo'))   { setTab(el.getAttribute('data-tabgo')); return; }
