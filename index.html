@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kiểm tra & Hỏi đáp Voucher · VHM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Lora:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  html,body{margin:0;padding:0;}
+  *{box-sizing:border-box;}
+  body{
+    background:#EDEAE0;
+    font-family:'Be Vietnam Pro',sans-serif;
+    color:#0B241B;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:0 16px 60px;
+  }
+  ::-webkit-scrollbar{width:9px;height:9px;}
+  ::-webkit-scrollbar-thumb{background:#c7cdc4;border-radius:6px;}
+
+  .shell{width:100%;max-width:900px;}
+
+  /* HEADER */
+  .header{
+    background:#0B2E22;color:#F4EFE2;border-radius:0 0 20px 20px;
+    padding:30px 34px 24px;margin-bottom:26px;
+    box-shadow:0 12px 36px rgba(11,36,27,0.16);
+  }
+  .eyebrow{
+    display:flex;align-items:center;gap:11px;color:#C9A34E;
+    font-size:11.5px;font-weight:600;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:12px;
+  }
+  .eyebrow .rule{width:22px;height:1.5px;background:#C9A34E;display:inline-block;}
+  .header h1{font-family:'Lora',serif;font-weight:600;font-size:30px;line-height:1.18;margin:0 0 6px;color:#fff;}
+  .header p{font-size:14.5px;line-height:1.5;margin:0 0 22px;color:#BFD6C9;max-width:600px;}
+  .tabs{display:flex;gap:8px;background:rgba(255,255,255,0.07);padding:5px;border-radius:12px;width:fit-content;}
+  .tab{
+    font-family:'Be Vietnam Pro',sans-serif;font-size:13.5px;font-weight:600;padding:9px 18px;
+    border-radius:9px;border:none;cursor:pointer;background:transparent;color:#AFCBBD;transition:all .15s;
+  }
+  .tab.active{background:#F4EFE2;color:#0B2E22;}
+
+  /* CARD */
+  .card{
+    background:#fff;border:1px solid #E7E1D3;border-radius:18px;
+    box-shadow:0 2px 10px rgba(11,36,27,0.05);
+  }
+  .card.pad{padding:30px 32px;}
+  .card.clip{overflow:hidden;}
+
+  /* WIZARD — QUESTION */
+  .q-meta{display:flex;align-items:center;gap:10px;margin-bottom:18px;}
+  .step-chip{
+    font-size:11.5px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#0E5C43;
+    background:#E6F1EA;padding:5px 12px;border-radius:999px;
+  }
+  .crumb{font-size:12.5px;color:#8A9088;}
+  .q-text{font-family:'Lora',serif;font-size:22px;line-height:1.4;color:#0B241B;font-weight:600;margin:0 0 22px;}
+  .opts{display:flex;flex-direction:column;gap:11px;}
+  .opt{
+    text-align:left;display:flex;align-items:center;gap:14px;width:100%;
+    background:#FAFBF9;border:1.5px solid #E2E6DE;border-radius:12px;padding:16px 18px;cursor:pointer;
+    font-family:'Be Vietnam Pro',sans-serif;font-size:15px;line-height:1.45;color:#233028;transition:all .15s;
+  }
+  .opt:hover{border-color:#1E8C5A;background:#F1F8F3;}
+  .opt .key{
+    flex-shrink:0;width:24px;height:24px;border-radius:7px;background:#0E5C43;color:#fff;
+    display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;
+  }
+  .link-back{
+    margin-top:22px;background:none;border:none;color:#8A9088;
+    font-family:'Be Vietnam Pro',sans-serif;font-size:13.5px;cursor:pointer;padding:0;
+  }
+
+  /* WIZARD — RESULT */
+  .result-head{display:flex;align-items:center;gap:18px;padding:28px 32px;border-bottom:1px solid #E7E1D3;}
+  .result-icon{
+    flex-shrink:0;width:52px;height:52px;border-radius:50%;color:#fff;
+    display:inline-flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;
+  }
+  .result-badge{font-size:12px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:3px;}
+  .result-title{font-family:'Lora',serif;font-size:23px;font-weight:600;color:#0B241B;line-height:1.25;}
+  .result-body{padding:26px 32px 30px;}
+  .result-detail{font-size:15.5px;line-height:1.7;color:#3A4A42;margin:0 0 20px;}
+  .refs{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:24px;}
+  .refs .label{font-size:12.5px;color:#8A9088;font-weight:600;}
+  .ref-btn{
+    background:#EEF3EF;border:1px solid #D5E2DA;border-radius:8px;padding:6px 12px;
+    font-family:'Be Vietnam Pro',sans-serif;font-size:12.5px;font-weight:600;color:#0E5C43;cursor:pointer;white-space:nowrap;
+  }
+  .ref-btn:hover{background:#DEEAE2;}
+  .disclaimer{background:#F7F4ED;border-radius:10px;padding:13px 16px;margin-bottom:22px;}
+  .disclaimer p{font-size:12.5px;line-height:1.6;color:#7A8078;margin:0;}
+  .actions{display:flex;gap:12px;flex-wrap:wrap;}
+  .btn-primary{
+    background:#0E5C43;color:#fff;border:none;border-radius:10px;padding:13px 22px;
+    font-family:'Be Vietnam Pro',sans-serif;font-size:14.5px;font-weight:600;cursor:pointer;
+  }
+  .btn-primary:hover{background:#0B4B37;}
+  .btn-secondary{
+    background:#fff;color:#0E5C43;border:1.5px solid #CBDBD1;border-radius:10px;padding:13px 22px;
+    font-family:'Be Vietnam Pro',sans-serif;font-size:14.5px;font-weight:600;cursor:pointer;
+  }
+  .btn-ghost{
+    background:none;color:#8A9088;border:none;padding:13px 8px;
+    font-family:'Be Vietnam Pro',sans-serif;font-size:14px;cursor:pointer;
+  }
+
+  .foot-note{text-align:center;font-size:12.5px;color:#9A968A;margin:20px 0 0;}
+
+  /* FAQ */
+  .faq-wrap{display:flex;flex-direction:column;gap:26px;}
+  .section-title{display:flex;align-items:center;gap:12px;margin:4px 0 16px;}
+  .section-title span.t{font-family:'Lora',serif;font-size:20px;font-weight:600;color:#0B241B;}
+  .section-title span.line{flex:1;height:1px;background:#D8D2C2;}
+  .group-label{
+    font-size:12.5px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#0E5C43;margin:0 0 10px 2px;
+  }
+  .faq-list{display:flex;flex-direction:column;gap:9px;}
+  .faq-list.mb{margin-bottom:24px;}
+  .faq-item{background:#fff;border:1px solid #E7E1D3;border-radius:12px;overflow:hidden;}
+  .faq-q{
+    width:100%;text-align:left;display:flex;align-items:center;gap:13px;background:none;border:none;
+    padding:16px 18px;cursor:pointer;font-family:'Be Vietnam Pro',sans-serif;
+  }
+  .faq-q .dot{flex-shrink:0;width:9px;height:9px;border-radius:50%;}
+  .faq-q .num{flex-shrink:0;font-family:'Lora',serif;font-weight:600;color:#0E5C43;font-size:14px;width:26px;}
+  .faq-q .txt{flex:1;font-size:14.5px;line-height:1.45;color:#233028;font-weight:500;}
+  .faq-q .sign{flex-shrink:0;color:#B7BDB2;font-size:18px;}
+  .faq-a{padding:0 18px 18px 40px;}
+  .faq-a p{font-size:14px;line-height:1.68;color:#4A5A50;margin:0;}
+  .faq-item.flash{animation:flash 1.4s ease-out;}
+  @keyframes flash{0%{background:#FBF4E3;}100%{background:#fff;}}
+
+  /* GATE (access screen) */
+  .gate{position:fixed;inset:0;z-index:1000;background:#EDEAE0;display:flex;align-items:center;justify-content:center;padding:20px;overflow:auto;}
+  .gate.hidden{display:none;}
+  .gate-card{width:100%;max-width:440px;background:#fff;border:1px solid #E7E1D3;border-radius:20px;overflow:hidden;box-shadow:0 24px 60px rgba(11,36,27,0.22);}
+  .gate-head{background:#0B2E22;color:#F4EFE2;padding:28px 30px 24px;}
+  .gate-title{font-family:'Lora',serif;font-weight:600;font-size:24px;line-height:1.2;margin:0 0 8px;color:#fff;}
+  .gate-sub{font-size:13.5px;line-height:1.55;margin:0;color:#BFD6C9;}
+  .gate-body{padding:26px 30px 28px;}
+  .field{margin-bottom:16px;}
+  .field label{display:block;font-size:12.5px;font-weight:600;color:#3A4A42;margin-bottom:7px;}
+  .field input{width:100%;border:1.5px solid #DDE3DB;border-radius:12px;padding:13px 15px;font-family:'Be Vietnam Pro',sans-serif;font-size:15px;color:#233028;outline:none;transition:border-color .15s;}
+  .field input:focus{border-color:#1E8C5A;}
+  .field input.bad{border-color:#C0392B;background:#FDF3F1;}
+  .gate-error{min-height:18px;font-size:12.5px;color:#C0392B;margin:-4px 0 12px;line-height:1.4;}
+  .gate-submit{width:100%;background:#0E5C43;color:#fff;border:none;border-radius:12px;padding:14px 22px;font-family:'Be Vietnam Pro',sans-serif;font-size:15px;font-weight:600;cursor:pointer;transition:background .15s;}
+  .gate-submit:hover{background:#0B4B37;}
+  .gate-submit:disabled{opacity:.6;cursor:default;}
+  .gate-note{font-size:11.5px;line-height:1.55;color:#9A968A;margin:16px 0 0;}
+</style>
+</head>
+<body>
+  <!-- ACCESS GATE -->
+  <div class="gate" id="gate">
+    <div class="gate-card">
+      <div class="gate-head">
+        <div class="eyebrow"><span class="rule"></span>Chính sách Voucher · VHM</div>
+        <div class="gate-title">Xác nhận thông tin truy cập</div>
+        <p class="gate-sub">Vui lòng cung cấp số điện thoại và mã căn để vào công cụ kiểm tra &amp; tra cứu Voucher.</p>
+      </div>
+      <form class="gate-body" id="gate-form" novalidate>
+        <div class="field">
+          <label for="g-phone">Số điện thoại</label>
+          <input id="g-phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="VD: 0901234567" />
+        </div>
+        <div class="field">
+          <label for="g-macan">Mã căn</label>
+          <input id="g-macan" type="text" autocomplete="off" placeholder="VD: OS1-05-12 hoặc A-1508" />
+        </div>
+        <div class="gate-error" id="g-error"></div>
+        <button class="gate-submit" type="submit" id="g-submit">Vào công cụ →</button>
+        <p class="gate-note">Thông tin dùng để xác nhận khách hàng và hỗ trợ tư vấn. Bằng việc tiếp tục, bạn đồng ý cho VHM/CĐT liên hệ về chính sách Voucher.</p>
+      </form>
+    </div>
+  </div>
+
+  <div class="shell">
+    <!-- HEADER -->
+    <div class="header">
+      <div class="eyebrow"><span class="rule"></span>Chính sách Voucher · VHM</div>
+      <h1>Kiểm tra &amp; Hỏi đáp Voucher</h1>
+      <p>Tự kiểm tra căn hộ của bạn có đủ điều kiện nhận Voucher, hoặc tra cứu toàn bộ câu hỏi về chính sách tặng &amp; sử dụng Voucher.</p>
+      <div class="tabs">
+        <button class="tab" data-tab="check">Kiểm tra điều kiện</button>
+        <button class="tab" data-tab="faq">Tra cứu câu hỏi</button>
+      </div>
+    </div>
+    <div id="view"></div>
+  </div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ================= KNOWLEDGE BASE (Q&A câu 20–34) =================
+  var kb = [
+    { num:20, phase:1, tag:'cond', q:'KH1 mua căn, ký HĐMB và đủ điều kiện tặng Voucher 15/7 nhưng sau đó chuyển nhượng căn cho KH2 thì KH1 có được tiếp tục dùng Voucher không?', a:'KH1 vẫn là chủ sở hữu tại thời điểm nhận Voucher (15/7) nên Voucher được tặng cho KH1. Voucher không được chuyển nhượng cho KH2.' },
+    { num:21, phase:1, tag:'cases', q:'KH A mua căn trước 20/06 và đã đóng ≥20% nhưng đã chuyển nhượng cho KH B trước thời điểm nhận Voucher thì KH B có được tặng Voucher không?', a:'Có 2 trường hợp. TH1: Nếu KH B đã ký HĐMB/HĐCN và được CĐT xác nhận chuyển nhượng (XNCN) trước thời điểm phát Voucher thì KH B được nhận. TH2: Nếu KH B chưa ký hoặc chưa được CĐT XNCN thì KH B không được nhận, Voucher vẫn phát cho KH A.' },
+    { num:22, phase:1, tag:'cases', q:'KH A mua căn đã có sổ, đủ điều kiện nhận Voucher nhưng đã chuyển nhượng BĐS trước thời điểm nhận Voucher thì bên nhận (KH B) có được hưởng Voucher không?', a:'Có 2 trường hợp. TH1: Nếu sổ đỏ đã sang tên cho KH B thì KH B được nhận Voucher. TH2: Nếu sổ đỏ chưa sang tên thì KH A vẫn được nhận. Lưu ý: nếu KH không còn là chủ sở hữu và không đủ điều kiện nhưng vẫn nhận Voucher do thông tin chưa cập nhật, thì KH và người thân cũng không được sử dụng Voucher.' },
+    { num:23, phase:1, tag:'no', q:'KH vay ngân hàng đã đóng đủ 20% trước 20/06; đến 15/7 ngân hàng chậm giải ngân, KH đóng đủ lãi chậm. Có bị tính vi phạm nghĩa vụ tài chính không?', a:'KH vẫn bị coi là vi phạm nghĩa vụ tài chính (nếu chậm giải ngân do lỗi của KH) và không đạt điều kiện nhận Voucher. Trường hợp do lỗi của bên khác (không phải khách hàng) sẽ được trình duyệt xử lý theo từng trường hợp khách quan.' },
+    { num:24, phase:1, tag:'no', q:'KH ký HĐMB trước 20/06/2026 nhưng theo chính sách chỉ phải đóng 15% và chưa đến hạn đóng đợt tiếp. Nhóm này có được tặng Voucher không?', a:'Không được áp dụng. KH phải đóng đủ 20% trước 20/06 và ký HĐMB/HĐCN trước 20/06 mới đủ điều kiện nhận Voucher.' },
+    { num:25, phase:1, tag:'yes', q:'KH đóng đủ 20% trước 20/6/26 nhưng chưa ký được HĐMB/HĐCN trước mốc 15/7 do ký quỹ hoặc chưa giải chấp thì có được nhận Voucher không?', a:'Vẫn được áp dụng nếu: (i) ký HĐMB/HĐCN đúng hạn theo thông báo của CĐT và (ii) đóng tối thiểu 20% tại thời điểm ký. Các căn này phát Voucher sau 15/7/26 nhưng vẫn chỉ được dùng trước 31/12/26.' },
+    { num:26, phase:1, tag:'no', q:'Các căn ký quỹ theo chính sách mà tiến độ mới thu 10% thì có được xem xét tặng Voucher không?', a:'Không được áp dụng. KH phải đóng đủ 20% trước 20/06 và ký HĐMB/HĐCN đúng hạn theo thông báo của CĐT.' },
+    { num:27, phase:1, tag:'yes', q:'Người nước ngoài ký Hợp đồng thuê (HĐT) dài hạn có được tặng và sử dụng Voucher không?', a:'Được áp dụng và xác định tương tự như HĐMB.' },
+    { num:28, phase:1, tag:'no', q:'KH đang sở hữu căn ký HĐMB được tặng Voucher, sau đó hủy HĐMB của chính căn được tặng thì có bị thu hồi Voucher không?', a:'Có thu hồi Voucher theo các điều khoản quy định tại HĐMB.' },
+    { num:29, phase:2, tag:'info', q:'Với các căn KH đã ký sau 20/6/2026, Voucher được quy đổi thành Tiền mặt hay VPoint? Tiền cọc thừa được hoàn thế nào?', a:'Với căn bán mới từ 20/6/26, sau khi áp Voucher mà tổng tiền thanh toán bị thừa, KH được hoàn bằng tiền mặt hoặc dùng thanh toán cho các đợt sau.' },
+    { num:30, phase:2, tag:'info', q:'KH mua căn qua nhận chuyển nhượng TTĐC từ người khác (không mua trực tiếp từ CĐT) có được dùng Voucher đang có không?', a:'Voucher áp dụng cho khách hàng cuối cùng khi vào HĐMB/HĐCN. Lưu ý: nếu vi phạm hạn đóng tiền/hạn ký khi chuyển nhượng TTĐC, TTKQ thì bị thu hồi căn, phạt cọc và không chuyển nhượng được (trừ trường hợp được phê duyệt gia hạn).' },
+    { num:31, phase:2, tag:'yes', q:'Chính sách VinClub về VPoint có được dùng thanh toán Kinh phí bảo trì và giá trị xây dựng không?', a:'VPoint được dùng như một phương thức thanh toán để giảm giá trị phải thanh toán khi mua BĐS (theo chính sách từng dự án VinClub). Do đó VPoint được thanh toán cho Kinh phí bảo trì và Giá trị xây dựng còn chưa thanh toán theo quy định VinClub.' },
+    { num:32, phase:2, tag:'cond', q:'KH cá nhân có Voucher có được dùng để mua BĐS đứng tên Doanh nghiệp không?', a:'Chỉ được áp dụng nếu chứng minh doanh nghiệp chỉ có 1 chủ sở hữu chính là cá nhân được tặng Voucher (ví dụ Công ty TNHH Một thành viên, Doanh nghiệp tư nhân 1 thành viên).' },
+    { num:33, phase:2, tag:'no', q:'KH có được dùng Voucher để mua căn ngay từ giai đoạn cọc căn không?', a:'Không được áp dụng. KH vẫn phải vào cọc đúng chính sách và ký TTĐC theo quy định, sau đó mới áp dụng Voucher.' },
+    { num:34, phase:2, tag:'no', q:'Căn đã dùng Voucher (tặng từ căn trước) để thanh toán; khi hủy/thanh lý căn thì KH bị phạt thế nào?', a:'KH bị phạt theo quy định tại HĐMB, tối đa 30% tổng giá trị BĐS, không phụ thuộc thanh toán bằng Voucher tặng hay tiền mặt/vay.' }
+  ];
+
+  // ================= TONES / DOTS =================
+  var tones = {
+    yes:  { accent:'#1E8C5A', bg:'#EAF6EF', border:'#BFE3CD', chip:'#1B7A4B', icon:'✓', label:'Đủ điều kiện' },
+    no:   { accent:'#C0392B', bg:'#FBECEA', border:'#F1CBC4', chip:'#B23A2C', icon:'✕', label:'Chưa đủ điều kiện' },
+    cond: { accent:'#C9962A', bg:'#FBF4E3', border:'#ECDBB3', chip:'#9A6B12', icon:'!', label:'Có điều kiện' },
+    refer:{ accent:'#3A7CB0', bg:'#EAF1F8', border:'#C9DCEC', chip:'#2C6088', icon:'⋯', label:'Cần trình duyệt' },
+    info: { accent:'#3A7CB0', bg:'#EAF1F8', border:'#C9DCEC', chip:'#2C6088', icon:'i', label:'Thông tin' }
+  };
+  var dots = { yes:'#1E8C5A', no:'#C0392B', cond:'#C9962A', cases:'#3A7CB0', info:'#3A7CB0' };
+
+  // ================= WIZARD NODES =================
+  var nodes = {
+    start: { type:'q', crumb:'Tình huống của bạn', q:'Tình huống hiện tại của bạn là gì?', opts:[
+      { label:'Tôi là người mua ban đầu, chưa chuyển nhượng căn', next:'buyer_sign' },
+      { label:'Tôi mua lại / nhận chuyển nhượng căn từ người khác', next:'transferee' },
+      { label:'Tôi đã bán / chuyển nhượng căn cho người khác', next:'seller' }
+    ]},
+    buyer_sign: { type:'q', crumb:'Người mua ban đầu', q:'Bạn đã ký HĐMB/HĐCN cho căn này chưa, và vào thời điểm nào?', opts:[
+      { label:'Đã ký trước ngày 20/06/2026', next:'buyer_pay' },
+      { label:'Chưa ký — do ký quỹ / chưa giải chấp, và sẽ ký đúng hạn CĐT thông báo', next:'buyer_cond_pay' },
+      { label:'Chưa ký / ký sau 20/06 (không thuộc lý do trên)', next:'r_no_sign' }
+    ]},
+    buyer_pay: { type:'q', crumb:'Người mua ban đầu', q:'Bạn đã thanh toán tối thiểu 20% giá trị căn trước ngày 20/06/2026 chưa?', opts:[
+      { label:'Rồi — đã đóng đủ từ 20% trở lên', next:'buyer_finance' },
+      { label:'Chưa — mới đóng khoảng 10–15%', next:'r_no_pay' }
+    ]},
+    buyer_cond_pay: { type:'q', crumb:'Trường hợp ký quỹ / giải chấp', q:'Tại thời điểm ký HĐMB/HĐCN (theo hạn CĐT), bạn có đóng tối thiểu 20% không?', opts:[
+      { label:'Có — đóng đủ ≥20% tại thời điểm ký', next:'r_cond_late' },
+      { label:'Không đủ 20% khi ký', next:'r_no_pay' }
+    ]},
+    buyer_finance: { type:'q', crumb:'Người mua ban đầu', q:'Bạn có đang vi phạm nghĩa vụ tài chính không (chậm đóng tiền / chậm giải ngân do lỗi của bạn)?', opts:[
+      { label:'Không — tôi thực hiện đúng hạn', next:'r_yes' },
+      { label:'Có — chậm do lỗi của tôi', next:'r_no_finance' },
+      { label:'Chậm giải ngân nhưng do lỗi bên khác (ngân hàng…), không phải tôi', next:'r_refer' }
+    ]},
+    transferee: { type:'q', crumb:'Bên nhận chuyển nhượng', q:'Bạn đã hoàn tất thủ tục sở hữu trước thời điểm phát Voucher (15/7) chưa?', opts:[
+      { label:'Đã ký HĐMB/HĐCN và được CĐT XNCN; hoặc sổ đỏ đã sang tên cho tôi', next:'r_yes_transferee' },
+      { label:'Chưa ký / chưa được CĐT XNCN / sổ đỏ chưa sang tên', next:'r_no_transferee' }
+    ]},
+    seller: { type:'q', crumb:'Bên đã chuyển nhượng đi', q:'Tại thời điểm phát Voucher (15/7), ai là chủ sở hữu hợp lệ của căn?', opts:[
+      { label:'Tôi vẫn là chủ sở hữu tại 15/7 (giao dịch chưa hoàn tất sang tên/XNCN)', next:'r_seller_keep' },
+      { label:'Bên mua đã hoàn tất sở hữu (đã XNCN / sổ đã sang tên) trước 15/7', next:'r_seller_lose' }
+    ]},
+
+    r_yes: { type:'r', tone:'yes', title:'Căn của bạn đủ điều kiện được tặng Voucher', detail:'Bạn đã ký HĐMB/HĐCN và đóng đủ tối thiểu 20% trước 20/06/2026, đồng thời không vi phạm nghĩa vụ tài chính. Voucher sẽ được phát vào 15/7 và cần sử dụng trước 31/12/2026.', refs:[24,23] },
+    r_cond_late: { type:'r', tone:'cond', title:'Có thể được — theo điều kiện', detail:'Trường hợp chưa ký kịp trước 15/7 do ký quỹ / chưa giải chấp vẫn được áp dụng NẾU: (i) ký HĐMB/HĐCN đúng hạn CĐT thông báo, và (ii) đóng tối thiểu 20% tại thời điểm ký. Voucher sẽ phát sau 15/7 nhưng vẫn phải dùng trước 31/12/2026.', refs:[25] },
+    r_no_sign: { type:'r', tone:'no', title:'Chưa đủ điều kiện', detail:'Cần ký HĐMB/HĐCN trước 20/06/2026 (hoặc thuộc diện ký quỹ / giải chấp và ký đúng hạn CĐT). Ký muộn ngoài các diện này thì không đủ điều kiện nhận Voucher.', refs:[24,26] },
+    r_no_pay: { type:'r', tone:'no', title:'Chưa đủ điều kiện', detail:'Bắt buộc phải đóng đủ tối thiểu 20% (trước 20/06, hoặc tại thời điểm ký với diện đặc biệt). Mới đóng 10–15% thì chưa đủ điều kiện nhận Voucher.', refs:[24,26] },
+    r_no_finance: { type:'r', tone:'no', title:'Chưa đủ điều kiện', detail:'Việc vi phạm nghĩa vụ tài chính do lỗi của khách hàng khiến căn không đạt điều kiện nhận Voucher.', refs:[23] },
+    r_refer: { type:'r', tone:'refer', title:'Cần trình duyệt xét riêng', detail:'Nếu việc chậm giải ngân / thanh toán do lỗi của bên khác (không phải bạn), trường hợp có nguyên nhân khách quan sẽ được trình duyệt xử lý theo từng trường hợp cụ thể.', refs:[23] },
+    r_yes_transferee: { type:'r', tone:'yes', title:'Bạn (bên nhận chuyển nhượng) được nhận Voucher', detail:'Do bạn đã ký HĐMB/HĐCN và được CĐT xác nhận chuyển nhượng, hoặc sổ đỏ đã sang tên cho bạn trước thời điểm phát Voucher.', refs:[21,22] },
+    r_no_transferee: { type:'r', tone:'no', title:'Voucher không thuộc về bạn', detail:'Do chưa hoàn tất thủ tục (chưa được CĐT XNCN / sổ chưa sang tên) trước thời điểm phát Voucher, nên Voucher sẽ được phát cho bên bán (người mua ban đầu).', refs:[21,22] },
+    r_seller_keep: { type:'r', tone:'yes', title:'Voucher vẫn thuộc về bạn', detail:'Bạn vẫn là chủ sở hữu hợp lệ tại thời điểm phát Voucher (15/7) nên Voucher được tặng cho bạn. Lưu ý: Voucher KHÔNG được chuyển nhượng cho bên mua.', refs:[20,22] },
+    r_seller_lose: { type:'r', tone:'info', title:'Voucher thuộc về bên mua', detail:'Bên mua đã hoàn tất sở hữu (được XNCN / sổ đã sang tên) trước thời điểm phát Voucher nên họ là người được nhận Voucher.', refs:[21,22] }
+  };
+
+  // ================= STATE =================
+  var state = { tab:'check', nodeId:'start', history:[], expandedFaq:null };
+  var view = document.getElementById('view');
+  var keys = ['A','B','C','D'];
+
+  function esc(s){
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ---- transitions ----
+  function go(next){ state.history.push(state.nodeId); state.nodeId = next; render(); }
+  function back(){ if(state.history.length){ state.nodeId = state.history.pop(); render(); } }
+  function restart(){ state.nodeId = 'start'; state.history = []; render(); }
+  function setTab(t){ state.tab = t; render(); }
+  function openFaq(num){
+    state.tab = 'faq'; state.expandedFaq = num; render();
+    var el = document.getElementById('faq-' + num);
+    if (el){ el.scrollIntoView({ behavior:'smooth', block:'center' }); el.classList.add('flash'); }
+  }
+  function toggleFaq(num){ state.expandedFaq = (state.expandedFaq === num ? null : num); render(); }
+
+  // ================= RENDERERS =================
+  function renderCheck(){
+    var raw = nodes[state.nodeId] || nodes.start;
+    var html = '';
+    if (raw.type === 'q'){
+      html += '<div class="card pad">';
+      html +=   '<div class="q-meta">';
+      html +=     '<span class="step-chip">Bước ' + (state.history.length + 1) + '</span>';
+      html +=     '<span class="crumb">' + esc(raw.crumb) + '</span>';
+      html +=   '</div>';
+      html +=   '<p class="q-text">' + esc(raw.q) + '</p>';
+      html +=   '<div class="opts">';
+      raw.opts.forEach(function(o,i){
+        html += '<button class="opt" data-go="' + esc(o.next) + '">'
+             +    '<span class="key">' + keys[i] + '</span>'
+             +    '<span>' + esc(o.label) + '</span>'
+             +  '</button>';
+      });
+      html +=   '</div>';
+      if (state.history.length > 0){
+        html += '<button class="link-back" data-back="1">← Quay lại câu trước</button>';
+      }
+      html += '</div>';
+    } else {
+      var t = tones[raw.tone];
+      html += '<div class="card clip">';
+      html +=   '<div class="result-head" style="background:' + t.bg + ';border-bottom-color:' + t.border + ';">';
+      html +=     '<span class="result-icon" style="background:' + t.accent + ';">' + t.icon + '</span>';
+      html +=     '<div>';
+      html +=       '<div class="result-badge" style="color:' + t.chip + ';">' + esc(t.label) + '</div>';
+      html +=       '<div class="result-title">' + esc(raw.title) + '</div>';
+      html +=     '</div>';
+      html +=   '</div>';
+      html +=   '<div class="result-body">';
+      html +=     '<p class="result-detail">' + esc(raw.detail) + '</p>';
+      html +=     '<div class="refs"><span class="label">Căn cứ:</span>';
+      raw.refs.forEach(function(n){
+        html += '<button class="ref-btn" data-ref="' + n + '">Câu ' + n + ' →</button>';
+      });
+      html +=     '</div>';
+      html +=     '<div class="disclaimer"><p>Kết quả mang tính tham khảo theo bộ Q&amp;A. Việc áp dụng chính thức căn cứ theo chính sách chương trình và các điều khoản tại HĐMB; trường hợp đặc thù do CĐT/VHM trình duyệt.</p></div>';
+      html +=     '<div class="actions">';
+      html +=       '<button class="btn-primary" data-restart="1">Kiểm tra lại từ đầu</button>';
+      html +=       '<button class="btn-secondary" data-back="1">← Quay lại</button>';
+      html +=       '<button class="btn-ghost" data-tabgo="faq">Còn thắc mắc? Tra cứu câu hỏi →</button>';
+      html +=     '</div>';
+      html +=   '</div>';
+      html += '</div>';
+    }
+    html += '<p class="foot-note">Công cụ hỏi đáp tình huống — dựa trên bộ Q&amp;A Chính sách Voucher (câu 20–34).</p>';
+    return html;
+  }
+
+  function faqItem(item){
+    var open = state.expandedFaq === item.num;
+    var dot = dots[item.tag] || '#8A9088';
+    var html = '<div class="faq-item" id="faq-' + item.num + '">';
+    html +=   '<button class="faq-q" data-faq="' + item.num + '">';
+    html +=     '<span class="dot" style="background:' + dot + ';"></span>';
+    html +=     '<span class="num">' + item.num + '</span>';
+    html +=     '<span class="txt">' + esc(item.q) + '</span>';
+    html +=     '<span class="sign">' + (open ? '–' : '+') + '</span>';
+    html +=   '</button>';
+    if (open){
+      html += '<div class="faq-a"><p>' + esc(item.a) + '</p></div>';
+    }
+    html += '</div>';
+    return html;
+  }
+
+  function renderFaq(){
+    var faq1 = kb.filter(function(x){ return x.phase === 1; });
+    var faq2 = kb.filter(function(x){ return x.phase === 2; });
+    var html = '<div class="faq-wrap">';
+    html +=   '<div>';
+    html +=     '<div class="section-title"><span class="t">Tra cứu toàn bộ câu hỏi</span><span class="line"></span></div>';
+    html +=     '<div class="group-label">I · Giai đoạn Tặng Voucher</div>';
+    html +=     '<div class="faq-list mb">' + faq1.map(faqItem).join('') + '</div>';
+    html +=     '<div class="group-label">II · Giai đoạn Sử dụng Voucher</div>';
+    html +=     '<div class="faq-list">' + faq2.map(faqItem).join('') + '</div>';
+    html +=   '</div>';
+    html +=   '<p class="foot-note">Trợ lý trả lời dựa trên bộ Q&amp;A chính thức; vui lòng liên hệ tư vấn viên/CĐT cho trường hợp cụ thể.</p>';
+    html += '</div>';
+    return html;
+  }
+
+  function render(){
+    // tabs
+    var tabBtns = document.querySelectorAll('.tab');
+    for (var i=0;i<tabBtns.length;i++){
+      tabBtns[i].classList.toggle('active', tabBtns[i].getAttribute('data-tab') === state.tab);
+    }
+    view.innerHTML = state.tab === 'check' ? renderCheck() : renderFaq();
+  }
+
+  // ================= EVENT DELEGATION =================
+  document.addEventListener('click', function(e){
+    var el = e.target.closest ? e.target.closest('[data-tab],[data-go],[data-back],[data-restart],[data-ref],[data-tabgo],[data-faq]') : null;
+    if (!el) return;
+    if (el.hasAttribute('data-tab'))     { setTab(el.getAttribute('data-tab')); return; }
+    if (el.hasAttribute('data-go'))      { go(el.getAttribute('data-go')); return; }
+    if (el.hasAttribute('data-back'))    { back(); return; }
+    if (el.hasAttribute('data-restart')) { restart(); return; }
+    if (el.hasAttribute('data-tabgo'))   { setTab(el.getAttribute('data-tabgo')); return; }
+    if (el.hasAttribute('data-ref'))     { openFaq(parseInt(el.getAttribute('data-ref'), 10)); return; }
+    if (el.hasAttribute('data-faq'))     { toggleFaq(parseInt(el.getAttribute('data-faq'), 10)); return; }
+  });
+
+  render();
+})();
+</script>
+
+<script>
+/* ================= ACCESS GATE ================= */
+(function () {
+  "use strict";
+
+  // ▼▼▼ PASTE your Google Apps Script Web App URL between the quotes to log accesses.
+  //     Leave empty to run the gate without logging (entries print to the console only).
+  var LOG_ENDPOINT = "";
+  // ▲▲▲  (setup steps are in README.md)
+
+  var STORAGE_KEY = "vhm_voucher_access";
+  var gate   = document.getElementById("gate");
+  var form   = document.getElementById("gate-form");
+  var phoneI = document.getElementById("g-phone");
+  var macanI = document.getElementById("g-macan");
+  var errEl  = document.getElementById("g-error");
+  var submit = document.getElementById("g-submit");
+
+  // Returning device — skip the gate.
+  try { if (localStorage.getItem(STORAGE_KEY)) { gate.classList.add("hidden"); return; } } catch (e) {}
+
+  function normPhone(v) {
+    v = (v || "").replace(/[^\d+]/g, "");
+    if (v.indexOf("+84") === 0) v = "0" + v.slice(3);
+    else if (v.indexOf("84") === 0 && v.length === 11) v = "0" + v.slice(2);
+    return v;
+  }
+  function validPhone(v) { return /^0\d{9}$/.test(normPhone(v)); }         // VN mobile: 10 digits, leading 0
+  function validMacan(v) { return (v || "").trim().length >= 2; }
+
+  function showErr(msg, el) {
+    errEl.textContent = msg;
+    phoneI.classList.remove("bad"); macanI.classList.remove("bad");
+    if (el) { el.classList.add("bad"); el.focus(); }
+  }
+
+  function logAccess(rec) {
+    if (!LOG_ENDPOINT) { console.log("[voucher-access]", rec); return; }
+    try {
+      var body = new URLSearchParams(rec).toString();
+      if (navigator.sendBeacon) {
+        navigator.sendBeacon(LOG_ENDPOINT, new Blob([body], { type: "application/x-www-form-urlencoded" }));
+      } else {
+        fetch(LOG_ENDPOINT, {
+          method: "POST", mode: "no-cors", keepalive: true,
+          headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: body
+        });
+      }
+    } catch (e) { console.warn("[voucher-access] log failed", e); }
+  }
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var phone = phoneI.value, macan = macanI.value;
+    if (!validPhone(phone)) { showErr("Số điện thoại không hợp lệ (VD: 0901234567).", phoneI); return; }
+    if (!validMacan(macan)) { showErr("Vui lòng nhập mã căn.", macanI); return; }
+
+    submit.disabled = true;
+    var rec = {
+      phone: normPhone(phone),
+      macan: macan.trim(),
+      ts: new Date().toISOString(),
+      ua: navigator.userAgent,
+      ref: document.referrer || ""
+    };
+    logAccess(rec);
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ phone: rec.phone, macan: rec.macan, ts: rec.ts })); } catch (e) {}
+    gate.classList.add("hidden");
+  });
+
+  // clear the error as the user corrects input
+  phoneI.addEventListener("input", function () { errEl.textContent = ""; phoneI.classList.remove("bad"); });
+  macanI.addEventListener("input", function () { errEl.textContent = ""; macanI.classList.remove("bad"); });
+})();
+</script>
+</body>
+</html>
